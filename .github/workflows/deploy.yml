@@ -3,6 +3,7 @@ name: Deploy Laravel to Freehostia
 on:
   push:
     branches: [main]
+  workflow_dispatch:   # allow manual trigger from GitHub Actions tab
 
 jobs:
   deploy:
@@ -21,9 +22,12 @@ jobs:
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Create .env file
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+          printf '%s' "$ENV_FILE" > .env
           php artisan key:generate --force
+          echo "APP_KEY set: $(grep APP_KEY .env | head -1)"
 
       - name: Create required storage directories
         run: |
@@ -34,7 +38,6 @@ jobs:
           mkdir -p storage/logs
           mkdir -p bootstrap/cache
           touch storage/logs/.gitkeep
-          touch storage/app/public/.gitkeep
 
       - name: Optimize for production
         run: |
@@ -48,11 +51,14 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /www/nwafiz.creativealphat.com/
+          server-dir: /
+          local-dir: ./
           exclude: |
             **/.git/**
+            **/.github/**
             **/node_modules/**
             **/tests/**
             **/.env.example
             **/README.md
             **/.gitignore
+            **/setup.php
