@@ -19,7 +19,7 @@ jobs:
           extensions: mbstring, bcmath, pdo_mysql, json
 
       - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+        run: COMPOSER_MEMORY_LIMIT=-1 composer update --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
       - name: Create .env file
         env:
