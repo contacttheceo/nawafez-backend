@@ -25,6 +25,17 @@ jobs:
           echo "${{ secrets.ENV_FILE }}" > .env
           php artisan key:generate --force
 
+      - name: Create required storage directories
+        run: |
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/app/public
+          mkdir -p storage/logs
+          mkdir -p bootstrap/cache
+          touch storage/logs/.gitkeep
+          touch storage/app/public/.gitkeep
+
       - name: Optimize for production
         run: |
           php artisan config:cache
@@ -37,11 +48,11 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /home/www/
+          server-dir: /www/nwafiz.creativealphat.com/
           exclude: |
-            **/.git*
-            **/.git*/**
+            **/.git/**
             **/node_modules/**
             **/tests/**
             **/.env.example
             **/README.md
+            **/.gitignore
