@@ -18,22 +18,30 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, bcmath, pdo_mysql, json
 
-      - name: Create bootstrap/cache before Composer
-        run: mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/app/public storage/logs
-
-      - name: Install Composer dependencies
-        run: COMPOSER_MEMORY_LIMIT=-1 composer update --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
-
-      - name: Run Composer post-install scripts
-        run: composer run-script post-autoload-dump || php artisan package:discover --ansi
+      - name: Create required directories
+        run: |
+          mkdir -p bootstrap/cache
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/app/public
+          mkdir -p storage/logs
 
       - name: Create .env file
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
           printf '%s' "$ENV_FILE" > .env
-          php artisan key:generate --force
-          echo "APP_KEY set: $(grep APP_KEY .env | head -1)"
+          echo ".env created ($(wc -c < .env) bytes)"
+
+      - name: Install Composer dependencies
+        run: COMPOSER_MEMORY_LIMIT=-1 composer update --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+
+      - name: Run package discovery
+        run: php artisan package:discover --ansi
+
+      - name: Generate app key
+        run: php artisan key:generate --force
 
       - name: Optimize for production
         run: |
