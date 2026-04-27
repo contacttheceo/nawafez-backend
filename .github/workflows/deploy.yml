@@ -26,6 +26,8 @@ jobs:
           mkdir -p storage/framework/views
           mkdir -p storage/app/public
           mkdir -p storage/logs
+          mkdir -p resources/views
+          mkdir -p resources/lang
 
       - name: Create .env file
         env:
