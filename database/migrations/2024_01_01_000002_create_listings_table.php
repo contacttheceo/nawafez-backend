@@ -64,7 +64,7 @@ return new class extends Migration
             $table->index('price');
 
             // Full-text search
-            $table->fullText(['title_ar', 'title_en', 'description_ar', 'description_en']);
+            $table->fullText(['title_ar', 'title_en', 'description_ar', 'description_en'], 'listings_fulltext_idx');
         });
     }
 
