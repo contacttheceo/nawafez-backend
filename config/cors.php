@@ -7,11 +7,13 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        env('FRONTEND_URL', 'https://nawafez.vercel.app'),
+        'https://nawafez-frontend.vercel.app',
+        'https://nawafez.vercel.app',
+        env('FRONTEND_URL', 'https://nawafez-frontend.vercel.app'),
     ],
 
     'allowed_origins_patterns' => [
-        'https://nawafez-*.vercel.app',  // preview deployments
+        'https://nawafez-.*\.vercel\.app',  // preview deployments
     ],
 
     'allowed_headers' => ['*'],
