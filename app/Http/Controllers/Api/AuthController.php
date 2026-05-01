@@ -33,7 +33,11 @@ class AuthController extends Controller
             'role'     => 'individual',
         ]);
 
-        event(new Registered($user));
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $e) {
+            \Log::warning('Registration email failed: ' . $e->getMessage());
+        }
 
         $token = $user->createToken('nawafez_app')->plainTextToken;
 
