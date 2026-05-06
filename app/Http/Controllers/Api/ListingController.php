@@ -78,20 +78,44 @@ class ListingController extends Controller
     // POST /api/listings
     public function store(Request $request): JsonResponse
     {
+        $section = $request->section;
+
+        // listing_type is required only for fleet & contracts (they have a meaningful type radio)
+        $listingTypeRule = in_array($section, ['fleet', 'contracts'])
+            ? ['required', 'string', 'max:60']
+            : ['nullable', 'string', 'max:60'];
+
+        // city is required for all sections except forum
+        $cityRule = $section === 'forum'
+            ? ['nullable', 'string', 'max:80']
+            : ['required', 'string', 'max:80'];
+
         $this->validate($request, [
             'section'        => ['required', 'in:ma,fleet,contracts,jobs,forum'],
-            'listing_type'   => ['required', 'string', 'max:60'],
+            'listing_type'   => $listingTypeRule,
             'title_ar'       => ['required', 'string', 'max:255'],
             'title_en'       => ['nullable', 'string', 'max:255'],
             'description_ar' => ['nullable', 'string', 'max:5000'],
-            'city'           => ['required', 'string', 'max:80'],
+            'city'           => $cityRule,
             'price'          => ['nullable', 'integer', 'min:0'],
             'dynamic_data'   => ['nullable', 'json'],
             'images.*'       => ['nullable', 'image', 'max:5120'], // 5MB each
         ]);
 
-        $user    = $request->user();
-        $section = $request->section;
+        $user = $request->user();
+        // $section already declared above for validation rules
+
+        // Default listing_type for sections without a type radio
+        if (! $request->listing_type) {
+            $request->merge([
+                'listing_type' => match ($section) {
+                    'jobs'  => 'job',
+                    'forum' => 'discussion',
+                    'ma'    => 'acquisition',
+                    default => 'listing',
+                },
+            ]);
+        }
 
         // Determine status: M&A and contracts need review
         $status = in_array($section, ['ma', 'contracts']) ? 'pending_review' : 'active';
