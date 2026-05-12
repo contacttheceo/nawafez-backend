@@ -57,7 +57,7 @@ class MessageController extends Controller
                     ],
                     'unread_count' => $group
                         ->where('user_id', '!=', $userId)
-                        ->whereNull('data->read_at')
+                        ->filter(fn($msg) => !data_get($msg->data, 'read_at'))
                         ->count(),
                 ];
             })
