@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Services\ResendMailer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
 
 class AuthController extends Controller
@@ -33,10 +34,11 @@ class AuthController extends Controller
             'role'     => 'individual',
         ]);
 
+        // Send verification email via Resend HTTP API
         try {
-            event(new Registered($user));
+            $this->sendVerificationEmail($user);
         } catch (\Throwable $e) {
-            \Log::warning('Registration email failed: ' . $e->getMessage());
+            \Log::warning('Registration verification email failed: ' . $e->getMessage());
         }
 
         $token = $user->createToken('nawafez_app')->plainTextToken;
@@ -85,13 +87,36 @@ class AuthController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        // Find user — don't reveal whether email exists
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'إذا كان البريد مسجلاً، ستصلك رسالة خلال دقائق.',
+            ]);
+        }
+
+        // Create password reset token
+        $token       = Password::createToken($user);
+        $frontendUrl = env('FRONTEND_URL', 'https://nawafez.vercel.app');
+        $resetUrl    = "{$frontendUrl}/auth/reset-password?token={$token}&email={$user->email}";
+
+        // Send via Resend HTTP API (bypasses SMTP — uses HTTPS port 443)
+        $mailer = new ResendMailer();
+        $sent   = $mailer->send(
+            $user->email,
+            'إعادة تعيين كلمة المرور — نوافذ',
+            $this->resetPasswordEmailHtml($resetUrl)
+        );
+
+        if (!$sent) {
+            return response()->json([
+                'message' => 'فشل إرسال البريد الإلكتروني — يرجى المحاولة لاحقاً.',
+            ], 500);
+        }
 
         return response()->json([
-            'message' => $status === Password::RESET_LINK_SENT
-                ? 'تم إرسال رابط إعادة تعيين كلمة المرور على بريدك الإلكتروني.'
-                : 'تعذر إرسال الرابط، تأكد من صحة البريد الإلكتروني.',
-        ], $status === Password::RESET_LINK_SENT ? 200 : 422);
+            'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور على بريدك الإلكتروني.',
+        ]);
     }
 
     public function resetPassword(Request $request): JsonResponse
@@ -134,14 +159,76 @@ class AuthController extends Controller
 
     public function resendVerification(Request $request): JsonResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
             return response()->json(['message' => 'Email already verified.'], 422);
         }
-        $request->user()->sendEmailVerificationNotification();
+
+        $mailer = new ResendMailer();
+        $this->sendVerificationEmail($user);
+
         return response()->json(['message' => 'تم إرسال رابط التحقق مجدداً.']);
     }
 
     // ─── Private ─────────────────────────────────────────────────────────────
+
+    private function sendVerificationEmail(User $user): void
+    {
+        $frontendUrl = env('FRONTEND_URL', 'https://nawafez.vercel.app');
+        $id          = $user->getKey();
+        $hash        = sha1($user->email);
+        $verifyUrl   = "{$frontendUrl}/auth/verify-email?id={$id}&hash={$hash}";
+
+        $mailer = new ResendMailer();
+        $mailer->send(
+            $user->email,
+            'تحقق من بريدك الإلكتروني — نوافذ',
+            $this->verifyEmailHtml($verifyUrl, $user->name_ar)
+        );
+    }
+
+    private function resetPasswordEmailHtml(string $url): string
+    {
+        return "
+        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
+            <div style='text-align:center;margin-bottom:24px;'>
+                <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
+                <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
+            </div>
+            <h3 style='color:#0a2342;'>إعادة تعيين كلمة المرور</h3>
+            <p style='color:#444;line-height:1.6;'>تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك. اضغط على الزر أدناه للمتابعة:</p>
+            <div style='text-align:center;margin:28px 0;'>
+                <a href='{$url}' style='background:#0a2342;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;'>
+                    إعادة تعيين كلمة المرور
+                </a>
+            </div>
+            <p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:16px;'>
+                إذا لم تطلب هذا، يمكنك تجاهل الرسالة. الرابط صالح لمدة 60 دقيقة فقط.
+            </p>
+        </div>";
+    }
+
+    private function verifyEmailHtml(string $url, string $name): string
+    {
+        return "
+        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
+            <div style='text-align:center;margin-bottom:24px;'>
+                <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
+                <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
+            </div>
+            <h3 style='color:#0a2342;'>مرحباً {$name}،</h3>
+            <p style='color:#444;line-height:1.6;'>شكراً لتسجيلك في منصة نوافذ. اضغط على الزر أدناه لتفعيل حسابك:</p>
+            <div style='text-align:center;margin:28px 0;'>
+                <a href='{$url}' style='background:#10b981;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;'>
+                    تفعيل الحساب
+                </a>
+            </div>
+            <p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:16px;'>
+                إذا لم تسجّل في نوافذ، يمكنك تجاهل هذه الرسالة.
+            </p>
+        </div>";
+    }
 
     private function userResource(User $user): array
     {
@@ -151,6 +238,7 @@ class AuthController extends Controller
             'name_en'               => $user->name_en,
             'email'                 => $user->email,
             'phone'                 => $user->phone,
+            'avatar_url'            => $user->avatar ?? null,  // relative path — frontend builds URL
             'role'                  => $user->role,
             'is_trusted_payer'      => $user->is_trusted_payer,
             'email_verified_at'     => $user->email_verified_at,
