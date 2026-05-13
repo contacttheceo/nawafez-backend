@@ -63,7 +63,17 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user  = Auth::user();
+        $user = Auth::user();
+
+        // Block suspended users
+        if (method_exists($user, 'isSuspended') && $user->isSuspended()) {
+            Auth::logout();
+            return response()->json([
+                'message' => 'تم تعليق حسابك. للاستفسار: info@nwafizlogi.com',
+                'reason'  => $user->suspend_reason,
+            ], 403);
+        }
+
         $token = $user->createToken('nawafez_app')->plainTextToken;
 
         return response()->json([

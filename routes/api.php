@@ -96,6 +96,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Users
         Route::get('users',                          [AdminController::class, 'users']);
         Route::patch('users/{id}/trusted-payer',     [AdminController::class, 'toggleTrustedPayer']);
+        Route::patch('users/{id}/suspend',           [AdminController::class, 'suspendUser']);
+        Route::patch('users/{id}/unsuspend',         [AdminController::class, 'unsuspendUser']);
+        Route::delete('users/{id}',                  [AdminController::class, 'deleteUser']);
 
         // Business verifications
         Route::get('verifications',                  [AdminController::class, 'pendingVerifications']);
@@ -107,6 +110,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('listings/{id}/approve',        [AdminController::class, 'approveListing']);
         Route::patch('listings/{id}/reject',         [AdminController::class, 'rejectListing']);
         Route::patch('listings/{id}/feature',        [AdminController::class, 'toggleFeatured']);
+        Route::post('listings/bulk-approve',         [AdminController::class, 'bulkApproveListings']);
+        Route::post('listings/bulk-reject',          [AdminController::class, 'bulkRejectListings']);
 
         // Reports
         Route::get('reports',                        [AdminController::class, 'reports']);
@@ -117,5 +122,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Analytics
         Route::get('analytics',                      [AdminController::class, 'analytics']);
+
+        // Audit log
+        Route::get('audit-logs',                     [AdminController::class, 'auditLogs']);
     });
 });

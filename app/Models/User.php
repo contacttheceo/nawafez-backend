@@ -17,6 +17,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name_ar', 'name_en', 'email', 'password',
         'phone', 'avatar', 'role', 'business_verification',
         'subscription_data', 'is_trusted_payer',
+        'suspended_at', 'suspend_reason',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -29,7 +30,13 @@ class User extends Authenticatable implements MustVerifyEmail
             'business_verification' => 'array',
             'subscription_data'     => 'array',
             'is_trusted_payer'      => 'boolean',
+            'suspended_at'          => 'datetime',
         ];
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     // ─── Relationships ───────────────────────────────────────────────────────

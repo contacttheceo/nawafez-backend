@@ -3,15 +3,24 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Interaction;
 use App\Models\Listing;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\AdminEmailService;
+use App\Services\AuditLogger;
+use App\Services\ResendMailer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
+    private function emailService(): AdminEmailService
+    {
+        return new AdminEmailService(new ResendMailer());
+    }
+
     // GET /api/admin/dashboard
     public function dashboard(): JsonResponse
     {
@@ -176,10 +185,20 @@ class AdminController extends Controller
     }
 
     // PATCH /api/admin/users/{id}/trusted-payer
-    public function toggleTrustedPayer(int $id): JsonResponse
+    public function toggleTrustedPayer(Request $request, int $id): JsonResponse
     {
         $user = User::findOrFail($id);
-        $user->update(['is_trusted_payer' => !$user->is_trusted_payer]);
+        $before = $user->is_trusted_payer;
+        $user->update(['is_trusted_payer' => !$before]);
+
+        AuditLogger::log(
+            $request->user(),
+            'user.toggle_trusted_payer',
+            'user',
+            $user->id,
+            ['before' => $before, 'after' => $user->is_trusted_payer],
+            $request
+        );
 
         return response()->json([
             'message'          => $user->is_trusted_payer
@@ -200,7 +219,7 @@ class AdminController extends Controller
     }
 
     // POST /api/admin/verifications/{id}/approve
-    public function approveVerification(int $id): JsonResponse
+    public function approveVerification(Request $request, int $id): JsonResponse
     {
         $user                 = User::findOrFail($id);
         $verification         = $user->business_verification ?? [];
@@ -208,6 +227,18 @@ class AdminController extends Controller
         $verification['approved_at'] = now()->toISOString();
 
         $user->update(['business_verification' => $verification]);
+
+        AuditLogger::log(
+            $request->user(),
+            'verification.approve',
+            'user',
+            $user->id,
+            ['cr_number' => $verification['cr_number'] ?? null],
+            $request
+        );
+
+        try { $this->emailService()->verificationApproved($user); }
+        catch (\Throwable $e) { \Log::warning("verificationApproved email failed: " . $e->getMessage()); }
 
         return response()->json(['message' => 'تم قبول طلب التحقق التجاري.']);
     }
@@ -226,6 +257,18 @@ class AdminController extends Controller
         $verification['rejected_at']   = now()->toISOString();
 
         $user->update(['business_verification' => $verification]);
+
+        AuditLogger::log(
+            $request->user(),
+            'verification.reject',
+            'user',
+            $user->id,
+            ['reason' => $request->reason],
+            $request
+        );
+
+        try { $this->emailService()->verificationRejected($user, $request->reason); }
+        catch (\Throwable $e) { \Log::warning("verificationRejected email failed: " . $e->getMessage()); }
 
         return response()->json(['message' => 'تم رفض طلب التحقق التجاري.']);
     }
@@ -255,10 +298,22 @@ class AdminController extends Controller
     }
 
     // PATCH /api/admin/listings/{id}/approve
-    public function approveListing(int $id): JsonResponse
+    public function approveListing(Request $request, int $id): JsonResponse
     {
-        $listing = Listing::where('status', 'pending_review')->findOrFail($id);
+        $listing = Listing::findOrFail($id);
         $listing->update(['status' => 'active']);
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.approve',
+            'listing',
+            $listing->id,
+            ['title_ar' => $listing->title_ar, 'section' => $listing->section],
+            $request
+        );
+
+        try { $this->emailService()->listingApproved($listing); }
+        catch (\Throwable $e) { \Log::warning("listingApproved email failed: " . $e->getMessage()); }
 
         return response()->json(['message' => 'تم نشر الإعلان بنجاح.', 'data' => $listing]);
     }
@@ -276,19 +331,96 @@ class AdminController extends Controller
             'rejection_reason' => $request->reason,
         ]);
 
+        AuditLogger::log(
+            $request->user(),
+            'listing.reject',
+            'listing',
+            $listing->id,
+            ['reason' => $request->reason, 'title_ar' => $listing->title_ar],
+            $request
+        );
+
+        try { $this->emailService()->listingRejected($listing, $request->reason); }
+        catch (\Throwable $e) { \Log::warning("listingRejected email failed: " . $e->getMessage()); }
+
         return response()->json(['message' => 'تم رفض الإعلان.']);
     }
 
     // PATCH /api/admin/listings/{id}/feature
-    public function toggleFeatured(int $id): JsonResponse
+    public function toggleFeatured(Request $request, int $id): JsonResponse
     {
         $listing = Listing::findOrFail($id);
-        $listing->update(['is_featured' => !$listing->is_featured]);
+        $before = $listing->is_featured;
+        $listing->update(['is_featured' => !$before]);
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.toggle_featured',
+            'listing',
+            $listing->id,
+            ['before' => $before, 'after' => $listing->is_featured],
+            $request
+        );
 
         return response()->json([
             'message'     => $listing->is_featured ? 'تم تمييز الإعلان.' : 'تم إلغاء تمييز الإعلان.',
             'is_featured' => $listing->is_featured,
         ]);
+    }
+
+    // POST /api/admin/listings/bulk-approve
+    public function bulkApproveListings(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'ids'   => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer', 'exists:listings,id'],
+        ]);
+
+        $listings = Listing::whereIn('id', $request->ids)->get();
+        $count = 0;
+        foreach ($listings as $listing) {
+            $listing->update(['status' => 'active']);
+            try { $this->emailService()->listingApproved($listing); } catch (\Throwable $e) {}
+            $count++;
+        }
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.bulk_approve',
+            null, null,
+            ['ids' => $request->ids, 'count' => $count],
+            $request
+        );
+
+        return response()->json(['message' => "تم قبول {$count} إعلان.", 'count' => $count]);
+    }
+
+    // POST /api/admin/listings/bulk-reject
+    public function bulkRejectListings(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'ids'    => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*'  => ['integer', 'exists:listings,id'],
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $listings = Listing::whereIn('id', $request->ids)->get();
+        $count = 0;
+        foreach ($listings as $listing) {
+            $listing->update(['status' => 'rejected', 'rejection_reason' => $request->reason]);
+            try { $this->emailService()->listingRejected($listing, $request->reason); } catch (\Throwable $e) {}
+            $count++;
+        }
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.bulk_reject',
+            null, null,
+            ['ids' => $request->ids, 'count' => $count, 'reason' => $request->reason],
+            $request
+        );
+
+        return response()->json(['message' => "تم رفض {$count} إعلان.", 'count' => $count]);
     }
 
     // GET /api/admin/reports
@@ -306,7 +438,7 @@ class AdminController extends Controller
     }
 
     // PATCH /api/admin/reports/{id}/resolve
-    public function resolveReport(int $id): JsonResponse
+    public function resolveReport(Request $request, int $id): JsonResponse
     {
         $report          = Interaction::where('type', 'report')->findOrFail($id);
         $data            = $report->data;
@@ -315,7 +447,128 @@ class AdminController extends Controller
 
         $report->update(['data' => $data]);
 
+        AuditLogger::log(
+            $request->user(),
+            'report.resolve',
+            'report',
+            $report->id,
+            ['listing_id' => $report->listing_id],
+            $request
+        );
+
         return response()->json(['message' => 'تم تحديد البلاغ كمُعالَج.']);
+    }
+
+    // PATCH /api/admin/users/{id}/suspend
+    public function suspendUser(Request $request, int $id): JsonResponse
+    {
+        $this->validate($request, [
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $user = User::findOrFail($id);
+
+        if ($user->role === 'admin') {
+            return response()->json(['message' => 'لا يمكن تعليق حساب إداري.'], 403);
+        }
+        if ($user->id === $request->user()->id) {
+            return response()->json(['message' => 'لا يمكنك تعليق حسابك.'], 403);
+        }
+
+        $user->update([
+            'suspended_at'   => now(),
+            'suspend_reason' => $request->reason,
+        ]);
+        // Revoke all tokens so they can't keep using the app
+        $user->tokens()->delete();
+
+        AuditLogger::log(
+            $request->user(),
+            'user.suspend',
+            'user',
+            $user->id,
+            ['reason' => $request->reason],
+            $request
+        );
+
+        try { $this->emailService()->accountSuspended($user, $request->reason); }
+        catch (\Throwable $e) { \Log::warning("accountSuspended email failed: " . $e->getMessage()); }
+
+        return response()->json(['message' => 'تم تعليق الحساب.']);
+    }
+
+    // PATCH /api/admin/users/{id}/unsuspend
+    public function unsuspendUser(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+        $user->update(['suspended_at' => null, 'suspend_reason' => null]);
+
+        AuditLogger::log(
+            $request->user(),
+            'user.unsuspend',
+            'user',
+            $user->id,
+            [],
+            $request
+        );
+
+        return response()->json(['message' => 'تم إلغاء تعليق الحساب.']);
+    }
+
+    // DELETE /api/admin/users/{id}
+    public function deleteUser(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->role === 'admin') {
+            return response()->json(['message' => 'لا يمكن حذف حساب إداري.'], 403);
+        }
+        if ($user->id === $request->user()->id) {
+            return response()->json(['message' => 'لا يمكنك حذف حسابك من هنا.'], 403);
+        }
+
+        // Soft delete + revoke tokens; preserves financial records via FK
+        $user->tokens()->delete();
+        $user->delete();
+
+        AuditLogger::log(
+            $request->user(),
+            'user.delete',
+            'user',
+            $user->id,
+            ['name_ar' => $user->name_ar, 'email' => $user->email],
+            $request
+        );
+
+        return response()->json(['message' => 'تم حذف الحساب.']);
+    }
+
+    // GET /api/admin/audit-logs
+    public function auditLogs(Request $request): JsonResponse
+    {
+        $query = AuditLog::with('admin:id,name_ar,name_en,email')
+            ->orderByDesc('created_at');
+
+        if ($request->filled('admin_id')) {
+            $query->where('admin_id', $request->admin_id);
+        }
+        if ($request->filled('action')) {
+            $query->where('action', 'like', $request->action . '%');
+        }
+        if ($request->filled('target_type')) {
+            $query->where('target_type', $request->target_type);
+        }
+        if ($request->filled('target_id')) {
+            $query->where('target_id', $request->target_id);
+        }
+        if ($request->filled('from')) {
+            $query->where('created_at', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $query->where('created_at', '<=', $request->to);
+        }
+
+        return response()->json($query->paginate(25));
     }
 
     // GET /api/admin/revenue
