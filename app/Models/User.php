@@ -15,7 +15,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected $fillable = [
         'name_ar', 'name_en', 'email', 'password',
-        'phone', 'role', 'business_verification',
+        'phone', 'avatar', 'role', 'business_verification',
         'subscription_data', 'is_trusted_payer',
     ];
 
@@ -73,4 +73,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return app()->getLocale() === 'ar' ? $this->name_ar : $this->name_en;
     }
+
+    // Always expose avatar as avatar_url so the frontend never needs to know
+    // about the internal column name
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar;
+    }
+
+    protected $appends = ['avatar_url'];
 }

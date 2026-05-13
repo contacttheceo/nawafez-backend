@@ -76,9 +76,9 @@ if (!is_dir($root . '/vendor')) {
 
         $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
-        // Run migrations
-        $kernel->call('migrate', ['--force' => true]);
-        echo "✅ migrate: " . $kernel->output();
+        // Run migrations fresh (drops all tables and recreates)
+        $kernel->call('migrate:fresh', ['--force' => true]);
+        echo "✅ migrate:fresh: " . $kernel->output();
 
         // Seed (creates admin user)
         $kernel->call('db:seed', ['--force' => true]);

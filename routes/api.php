@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\StatsController;
+use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\AiController;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
@@ -19,11 +22,16 @@ Route::prefix('auth')->group(function () {
          ->name('verification.verify');
 });
 
+// Public stats
+Route::get('stats', [StatsController::class, 'index']);
+
 // Public listings (read-only)
-Route::get('listings/featured', [ListingController::class, 'featured']); // before {id}
-Route::get('listings',          [ListingController::class, 'index']);
-Route::get('listings/{id}',     [ListingController::class, 'show']);
-Route::post('listings/{id}/view', [ListingController::class, 'recordView']);
+Route::get('listings/featured',      [ListingController::class, 'featured']); // before {id}
+Route::get('listings',               [ListingController::class, 'index']);
+Route::get('listings/{id}',          [ListingController::class, 'show']);
+Route::post('listings/{id}/view',    [ListingController::class, 'recordView']);
+Route::get('listings/{id}/bids',     [InteractionController::class, 'getBids']);  // public summary; owner gets full list
+Route::get('listings/{id}/comments', [CommentController::class, 'index']);         // public read
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 
@@ -35,15 +43,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/resend-verification', [AuthController::class, 'resendVerification']);
 
     // Listings (write)
-    Route::post('listings',        [ListingController::class, 'store']);
-    Route::post('listings/{id}',   [ListingController::class, 'update']);  // POST for FormData (_method=PUT)
-    Route::delete('listings/{id}', [ListingController::class, 'destroy']);
+    Route::post('listings',              [ListingController::class, 'store']);
+    Route::post('listings/{id}',         [ListingController::class, 'update']);   // POST for FormData
+    Route::delete('listings/{id}',       [ListingController::class, 'destroy']);
+    Route::patch('listings/{id}/pause',  [ListingController::class, 'pause']);
+    Route::patch('listings/{id}/unpause',[ListingController::class, 'unpause']);
+    Route::patch('listings/{id}/renew',  [ListingController::class, 'renew']);
 
     // Per-listing interactions (RESTful on listing resource)
     Route::post('listings/{id}/bookmark',  [InteractionController::class, 'bookmark']);
     Route::delete('listings/{id}/bookmark',[InteractionController::class, 'removeBookmark']);
     Route::post('listings/{id}/bid',       [InteractionController::class, 'submitBid']);
     Route::post('listings/{id}/report',    [InteractionController::class, 'report']);
+
+    // Comments
+    Route::post  ('listings/{id}/comments',              [CommentController::class, 'store']);
+    Route::delete('listings/{id}/comments/{commentId}',  [CommentController::class, 'destroy']);
+
+    // AI
+    Route::post('ai/write-listing', [AiController::class, 'writeListing']);
 
     // Bookmarks list
     Route::get('bookmarks', [InteractionController::class, 'myBookmarks']);
@@ -62,7 +80,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function () {
         Route::get('dashboard',                [UserController::class, 'dashboard']);
         Route::get('listings',                 [UserController::class, 'myListings']);
+        Route::get('bids',                     [UserController::class, 'myBids']);
         Route::put('profile',                  [UserController::class, 'updateProfile']);
+        Route::post('avatar',                  [UserController::class, 'uploadAvatar']);
+        Route::delete('avatar',                [UserController::class, 'deleteAvatar']);
         Route::post('business-verification',   [UserController::class, 'uploadBusinessVerification']);
         Route::delete('account',               [UserController::class, 'deleteAccount']);
     });
@@ -93,5 +114,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Revenue
         Route::get('revenue',                        [AdminController::class, 'revenue']);
+
+        // Analytics
+        Route::get('analytics',                      [AdminController::class, 'analytics']);
     });
 });

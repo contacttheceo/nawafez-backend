@@ -108,6 +108,80 @@ class UserController extends Controller
         ]);
     }
 
+    // POST /api/user/avatar
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+
+        // Delete old avatar if stored in uploads/
+        if ($user->avatar && str_starts_with($user->avatar, 'uploads/')) {
+            @unlink(public_path($user->avatar));
+        }
+
+        // Store directly in public/uploads/avatars/{user_id}/ — no symlink needed
+        $uploadDir = public_path("uploads/avatars/{$user->id}");
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $ext      = $request->file('avatar')->getClientOriginalExtension();
+        $filename = uniqid('av_') . '.' . $ext;
+        $request->file('avatar')->move($uploadDir, $filename);
+
+        $path = "uploads/avatars/{$user->id}/{$filename}";
+        $user->update(['avatar' => $path]);
+
+        return response()->json([
+            'message'     => 'تم تحديث الصورة الشخصية بنجاح.',
+            'avatar_path' => $path,   // e.g. uploads/avatars/1/av_abc.jpg
+        ]);
+    }
+
+    // DELETE /api/user/avatar
+    public function deleteAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->avatar) {
+            if (str_starts_with($user->avatar, 'uploads/')) {
+                @unlink(public_path($user->avatar));
+            }
+            $user->update(['avatar' => null]);
+        }
+
+        return response()->json(['message' => 'تم حذف الصورة الشخصية.']);
+    }
+
+    // GET /api/user/bids — bids submitted by the logged-in user
+    public function myBids(Request $request): JsonResponse
+    {
+        $bids = Interaction::where('user_id', $request->user()->id)
+            ->where('type', 'bid')
+            ->with('listing:id,title_ar,title_en,section,status,price')
+            ->latest()
+            ->get()
+            ->map(fn($b) => [
+                'id'           => $b->id,
+                'amount'       => $b->data['amount']       ?? 0,
+                'message'      => $b->data['message']      ?? null,
+                'submitted_at' => $b->data['submitted_at'] ?? $b->created_at,
+                'listing'      => $b->listing ? [
+                    'id'       => $b->listing->id,
+                    'title_ar' => $b->listing->title_ar,
+                    'title_en' => $b->listing->title_en,
+                    'section'  => $b->listing->section,
+                    'status'   => $b->listing->status,
+                    'price'    => $b->listing->price,
+                ] : null,
+            ]);
+
+        return response()->json(['data' => $bids]);
+    }
+
     // DELETE /api/user/account
     public function deleteAccount(Request $request): JsonResponse
     {

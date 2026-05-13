@@ -60,6 +60,13 @@ class InteractionController extends Controller
     {
         $listing = Listing::active()->findOrFail($id);
 
+        // Owner cannot bid on their own listing
+        if ($listing->user_id === $request->user()->id) {
+            return response()->json([
+                'message' => 'لا يمكنك تقديم عرض على إعلانك الخاص.',
+            ], 403);
+        }
+
         $this->validate($request, [
             'amount'  => ['required', 'integer', 'min:1'],
             'message' => ['nullable', 'string', 'max:500'],
@@ -85,6 +92,46 @@ class InteractionController extends Controller
             'message' => 'تم تقديم عرض السعر بنجاح.',
             'data'    => $bid,
         ], 201);
+    }
+
+    // GET /api/listings/{id}/bids  — public summary + owner full list
+    public function getBids(Request $request, int $id): JsonResponse
+    {
+        $listing = Listing::findOrFail($id);
+
+        if ($listing->section !== 'ma') {
+            return response()->json(['bid_count' => 0, 'highest_bid' => null, 'bids' => []]);
+        }
+
+        $bids = Interaction::where('listing_id', $listing->id)
+            ->where('type', 'bid')
+            ->get();
+
+        $bidCount   = $bids->count();
+        $highestBid = $bidCount > 0
+            ? $bids->max(fn($b) => $b->data['amount'] ?? 0)
+            : null;
+
+        // Owner sees details — but NOT bidder identity
+        $isOwner  = $request->user()?->id === $listing->user_id;
+        $bidsList = [];
+
+        if ($isOwner && $bidCount > 0) {
+            $bidsList = $bids
+                ->sortByDesc(fn($b) => $b->data['amount'] ?? 0)
+                ->values()
+                ->map(fn($b) => [
+                    'amount'       => $b->data['amount']      ?? 0,
+                    'message'      => $b->data['message']     ?? null,
+                    'submitted_at' => $b->data['submitted_at'] ?? $b->created_at,
+                ])->toArray();
+        }
+
+        return response()->json([
+            'bid_count'   => $bidCount,
+            'highest_bid' => $highestBid > 0 ? $highestBid : null,
+            'bids'        => $bidsList,
+        ]);
     }
 
     // POST /api/listings/{id}/report
