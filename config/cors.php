@@ -9,7 +9,9 @@ return [
     'allowed_origins' => [
         'https://nawafez-frontend.vercel.app',
         'https://nawafez.vercel.app',
-        env('FRONTEND_URL', 'https://nawafez-frontend.vercel.app'),
+        'https://nwafizlogi.com',
+        'https://www.nwafizlogi.com',
+        env('FRONTEND_URL', 'https://www.nwafizlogi.com'),
     ],
 
     'allowed_origins_patterns' => [
