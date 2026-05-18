@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Listing;
 use App\Models\Interaction;
+use App\Services\ImageProcessor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -122,22 +123,26 @@ class UserController extends Controller
             @unlink(public_path($user->avatar));
         }
 
-        // Store directly in public/uploads/avatars/{user_id}/ — no symlink needed
+        // Resize to 400x400 max + compress to JPEG q85
         $uploadDir = public_path("uploads/avatars/{$user->id}");
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
+        $processor = new ImageProcessor();
+        $filename  = $processor->processToFile(
+            $request->file('avatar'),
+            $uploadDir,
+            uniqid('av_'),
+            ['max_width' => 400, 'max_height' => 400, 'quality' => 85]
+        );
 
-        $ext      = $request->file('avatar')->getClientOriginalExtension();
-        $filename = uniqid('av_') . '.' . $ext;
-        $request->file('avatar')->move($uploadDir, $filename);
+        if ($filename === null) {
+            return response()->json(['message' => 'فشل معالجة الصورة.'], 500);
+        }
 
         $path = "uploads/avatars/{$user->id}/{$filename}";
         $user->update(['avatar' => $path]);
 
         return response()->json([
             'message'     => 'تم تحديث الصورة الشخصية بنجاح.',
-            'avatar_path' => $path,   // e.g. uploads/avatars/1/av_abc.jpg
+            'avatar_path' => $path,
         ]);
     }
 

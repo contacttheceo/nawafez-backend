@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Listing;
+use App\Services\ImageProcessor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -142,13 +143,18 @@ class ListingController extends Controller
 
         $status = in_array($section, ['ma', 'contracts']) ? 'pending_review' : 'active';
 
-        $media = [];
+        $media     = [];
+        $processor = new ImageProcessor();
         if ($request->hasFile('images')) {
+            $dir = public_path("uploads/listings/{$user->id}");
             foreach ($request->file('images') as $i => $image) {
-                $dir  = public_path("uploads/listings/{$user->id}");
-                if (!is_dir($dir)) mkdir($dir, 0755, true);
-                $name    = \Illuminate\Support\Str::random(40) . '.' . $image->getClientOriginalExtension();
-                $image->move($dir, $name);
+                $base = \Illuminate\Support\Str::random(40);
+                $name = $processor->processToFile($image, $dir, $base, [
+                    'max_width'  => 1920,
+                    'max_height' => 1920,
+                    'quality'    => 80,
+                ]);
+                if ($name === null) continue;  // skip if processing + fallback both failed
                 $path    = "listings/{$user->id}/{$name}";
                 $media[] = ['path' => $path, 'type' => 'image', 'is_primary' => $i === 0];
             }
@@ -240,15 +246,20 @@ class ListingController extends Controller
             );
         }
 
-        // Handle new image uploads
+        // Handle new image uploads (compressed via ImageProcessor)
         $user = $request->user();
         if ($request->hasFile('images')) {
+            $processor = new ImageProcessor();
+            $dir = public_path("uploads/listings/{$user->id}");
             foreach ($request->file('images') as $image) {
-                $dir = public_path("uploads/listings/{$user->id}");
-                if (!is_dir($dir)) mkdir($dir, 0755, true);
-                $name          = \Illuminate\Support\Str::random(40) . '.' . $image->getClientOriginalExtension();
-                $image->move($dir, $name);
-                $path          = "listings/{$user->id}/{$name}";
+                $base = \Illuminate\Support\Str::random(40);
+                $name = $processor->processToFile($image, $dir, $base, [
+                    'max_width'  => 1920,
+                    'max_height' => 1920,
+                    'quality'    => 80,
+                ]);
+                if ($name === null) continue;
+                $path           = "listings/{$user->id}/{$name}";
                 $currentMedia[] = ['path' => $path, 'type' => 'image', 'is_primary' => false];
             }
             // First image is always primary
