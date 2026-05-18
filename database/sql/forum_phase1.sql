@@ -1,16 +1,22 @@
 -- Forum Phase 1 — Q&A features
--- Run this in phpMyAdmin > SQL tab. All statements idempotent.
+-- Run this in phpMyAdmin > SQL tab on the Freehostia database.
+--
+-- ⚠️  Compatible with MySQL < 8.0.29 (Freehostia uses an older MySQL
+--    that does NOT support `ADD COLUMN IF NOT EXISTS` or
+--    `CREATE INDEX IF NOT EXISTS`). On a fresh install all statements
+--    succeed. On a re-run you'll see "Duplicate column" / "Duplicate
+--    key name" — those are safe to ignore (no data loss).
 
 -- ─── 1) Extend `comments` with Q&A fields + soft delete ───────────────────────
 ALTER TABLE `comments`
-  ADD COLUMN IF NOT EXISTS `parent_id`           BIGINT UNSIGNED NULL DEFAULT NULL AFTER `user_id`,
-  ADD COLUMN IF NOT EXISTS `is_official_answer`  BOOLEAN NOT NULL DEFAULT 0 AFTER `body`,
-  ADD COLUMN IF NOT EXISTS `is_marked_helpful`   BOOLEAN NOT NULL DEFAULT 0 AFTER `is_official_answer`,
-  ADD COLUMN IF NOT EXISTS `upvotes_count`       INT UNSIGNED NOT NULL DEFAULT 0 AFTER `is_marked_helpful`,
-  ADD COLUMN IF NOT EXISTS `deleted_at`          TIMESTAMP NULL DEFAULT NULL;
+  ADD COLUMN `parent_id`           BIGINT UNSIGNED NULL DEFAULT NULL AFTER `user_id`,
+  ADD COLUMN `is_official_answer`  BOOLEAN NOT NULL DEFAULT 0 AFTER `body`,
+  ADD COLUMN `is_marked_helpful`   BOOLEAN NOT NULL DEFAULT 0 AFTER `is_official_answer`,
+  ADD COLUMN `upvotes_count`       INT UNSIGNED NOT NULL DEFAULT 0 AFTER `is_marked_helpful`,
+  ADD COLUMN `deleted_at`          TIMESTAMP NULL DEFAULT NULL;
 
-CREATE INDEX IF NOT EXISTS `comments_parent_idx`        ON `comments`(`parent_id`);
-CREATE INDEX IF NOT EXISTS `comments_listing_sort_idx`  ON `comments`(`listing_id`, `is_official_answer`, `upvotes_count`);
+CREATE INDEX `comments_parent_idx`        ON `comments`(`parent_id`);
+CREATE INDEX `comments_listing_sort_idx`  ON `comments`(`listing_id`, `is_official_answer`, `upvotes_count`);
 
 -- ─── 2) `comment_votes` for upvote tracking ──────────────────────────────────
 CREATE TABLE IF NOT EXISTS `comment_votes` (
@@ -29,9 +35,9 @@ CREATE TABLE IF NOT EXISTS `comment_votes` (
 
 -- ─── 3) Add `forum_category` to listings ─────────────────────────────────────
 ALTER TABLE `listings`
-  ADD COLUMN IF NOT EXISTS `forum_category` VARCHAR(30) NULL DEFAULT NULL AFTER `listing_type`;
+  ADD COLUMN `forum_category` VARCHAR(30) NULL DEFAULT NULL AFTER `listing_type`;
 
-CREATE INDEX IF NOT EXISTS `listings_forum_cat_idx` ON `listings`(`forum_category`);
+CREATE INDEX `listings_forum_cat_idx` ON `listings`(`forum_category`);
 
 -- ─── 4) Verify ───────────────────────────────────────────────────────────────
 -- Run these as a sanity check:
