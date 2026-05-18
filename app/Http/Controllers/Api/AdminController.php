@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\Comment;
 use App\Models\Interaction;
 use App\Models\Listing;
 use App\Models\Payment;
@@ -580,5 +581,63 @@ class AdminController extends Controller
             ->paginate(20);
 
         return response()->json($payments);
+    }
+
+    /* ── Comments Moderation (Phase: Forum) ────────────────────────────────── */
+
+    /**
+     * GET /api/admin/comments
+     * Filters:
+     *   ?reported=1        → only comments that have report interactions
+     *   ?listing_id=42     → only comments under this listing
+     *   ?search=keyword    → fulltext-ish on body
+     */
+    public function comments(Request $request): JsonResponse
+    {
+        $query = Comment::with([
+            'user:id,name_ar,name_en,email,avatar,role',
+            'listing:id,title_ar,title_en,section',
+        ])->orderByDesc('created_at');
+
+        if ($request->boolean('reported')) {
+            $reportedCommentIds = Interaction::where('type', 'report')
+                ->whereNotNull('data->comment_id')
+                ->pluck('data')
+                ->map(fn ($d) => is_array($d) ? ($d['comment_id'] ?? null) : null)
+                ->filter()
+                ->unique()
+                ->values();
+            $query->whereIn('id', $reportedCommentIds);
+        }
+
+        if ($request->filled('listing_id')) {
+            $query->where('listing_id', $request->listing_id);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('body', 'like', '%' . $request->search . '%');
+        }
+
+        return response()->json($query->paginate(20));
+    }
+
+    /**
+     * DELETE /api/admin/comments/{id}
+     */
+    public function deleteComment(Request $request, int $id): JsonResponse
+    {
+        $comment = Comment::findOrFail($id);
+        $comment->delete();
+
+        AuditLogger::log(
+            $request->user(),
+            'comment.delete',
+            'comment',
+            $comment->id,
+            ['listing_id' => $comment->listing_id, 'preview' => mb_substr($comment->body, 0, 80)],
+            $request
+        );
+
+        return response()->json(['message' => 'تم حذف التعليق.']);
     }
 }

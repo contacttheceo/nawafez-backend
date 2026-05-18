@@ -43,6 +43,11 @@ class ListingController extends Controller
             }
         }
 
+        // Forum category filter (legal | financial | operational | logistics)
+        if ($request->filled('forum_category')) {
+            $query->where('forum_category', $request->forum_category);
+        }
+
         // Full-text search
         if ($request->filled('search')) {
             $query->search($request->search);
@@ -116,9 +121,14 @@ class ListingController extends Controller
             ? ['nullable', 'string', 'max:80']
             : ['required', 'string', 'max:80'];
 
+        $forumCategoryRule = $section === 'forum'
+            ? ['required', 'in:legal,financial,operational,logistics']
+            : ['nullable', 'in:legal,financial,operational,logistics'];
+
         $this->validate($request, [
             'section'        => ['required', 'in:ma,fleet,contracts,jobs,forum'],
             'listing_type'   => $listingTypeRule,
+            'forum_category' => $forumCategoryRule,
             'title_ar'       => ['required', 'string', 'max:255'],
             'title_en'       => ['nullable', 'string', 'max:255'],
             'description_ar' => ['nullable', 'string', 'max:5000'],
@@ -166,6 +176,7 @@ class ListingController extends Controller
             'user_id'        => $user->id,
             'section'        => $section,
             'listing_type'   => $request->listing_type,
+            'forum_category' => $section === 'forum' ? $request->forum_category : null,
             'title_ar'       => $request->title_ar,
             'title_en'       => $request->title_en,
             'description_ar' => $request->description_ar,
@@ -178,7 +189,7 @@ class ListingController extends Controller
             'status'         => $status,
             'dynamic_data'   => $dynamicData,
             'media'          => $media,
-            'expires_at'     => now()->addDays(30),   // ← 30 days
+            'expires_at'     => now()->addDays(60),   // ← 60 days (matches spec)
         ]);
 
         $listing->update([
@@ -206,6 +217,7 @@ class ListingController extends Controller
             'contact_phone'  => ['sometimes', 'nullable', 'string', 'max:20'],
             'listing_type'   => ['sometimes', 'nullable', 'string', 'max:60'],
             'section'        => ['sometimes', 'in:ma,fleet,contracts,jobs,forum'],
+            'forum_category' => ['sometimes', 'nullable', 'in:legal,financial,operational,logistics'],
             'dynamic_data'   => ['sometimes', 'nullable', 'json'],
             'images.*'       => ['sometimes', 'image', 'max:5120'],
             'remove_images'  => ['sometimes', 'nullable', 'json'],  // JSON array of paths to remove
@@ -214,6 +226,7 @@ class ListingController extends Controller
         $data = $request->only([
             'title_ar', 'title_en', 'description_ar', 'description_en',
             'city', 'region', 'price', 'price_type', 'contact_phone', 'listing_type',
+            'forum_category',
         ]);
 
         // Section change → back to pending_review
@@ -337,7 +350,7 @@ class ListingController extends Controller
             ], 422);
         }
 
-        $newExpiry = now()->addDays(30);
+        $newExpiry = now()->addDays(60);
         $newStatus = in_array($listing->status, ['expired']) ? 'active' : $listing->status;
 
         $listing->update([
@@ -346,7 +359,7 @@ class ListingController extends Controller
         ]);
 
         return response()->json([
-            'message'    => 'تم تجديد الإعلان لمدة 30 يوماً إضافياً.',
+            'message'    => 'تم تجديد الإعلان لمدة 60 يوماً إضافياً.',
             'expires_at' => $newExpiry->toISOString(),
             'status'     => $newStatus,
         ]);

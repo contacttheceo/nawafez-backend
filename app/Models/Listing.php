@@ -11,7 +11,7 @@ class Listing extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'section', 'listing_type',
+        'user_id', 'section', 'listing_type', 'forum_category',
         'title_ar', 'title_en', 'description_ar', 'description_en',
         'city', 'region', 'price', 'currency', 'price_type',
         'status', 'rejection_reason',
@@ -79,6 +79,16 @@ class Listing extends Model
     public function scopeInCity($query, string $city)
     {
         return $query->where('city', $city);
+    }
+
+    public function scopeForumCategory($query, string $category)
+    {
+        return $query->where('forum_category', $category);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
     }
 
     public function scopeSearch($query, string $term)

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\CommentInteractionController;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
@@ -59,6 +60,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Comments
     Route::post  ('listings/{id}/comments',              [CommentController::class, 'store']);
     Route::delete('listings/{id}/comments/{commentId}',  [CommentController::class, 'destroy']);
+
+    // Comment interactions (Q&A forum)
+    Route::post('comments/{id}/vote',           [CommentInteractionController::class, 'toggleVote']);
+    Route::post('comments/{id}/mark-helpful',   [CommentInteractionController::class, 'markHelpful']);
+    Route::post('comments/{id}/unmark-helpful', [CommentInteractionController::class, 'unmarkHelpful']);
+    Route::post('comments/{id}/report',         [CommentInteractionController::class, 'report']);
 
     // AI
     Route::post('ai/write-listing', [AiController::class, 'writeListing']);
@@ -125,5 +132,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Audit log
         Route::get('audit-logs',                     [AdminController::class, 'auditLogs']);
+
+        // Comments moderation
+        Route::get   ('comments',                            [AdminController::class, 'comments']);
+        Route::delete('comments/{id}',                       [AdminController::class, 'deleteComment']);
+        Route::post  ('comments/{id}/mark-official',         [CommentInteractionController::class, 'markOfficial']);
+        Route::post  ('comments/{id}/unmark-official',       [CommentInteractionController::class, 'unmarkOfficial']);
     });
 });
