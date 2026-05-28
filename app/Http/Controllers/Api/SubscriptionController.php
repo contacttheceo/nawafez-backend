@@ -23,7 +23,13 @@ class SubscriptionController extends Controller
             ->orderBy('display_order')
             ->get();
 
-        return response()->json(['data' => $plans]);
+        return response()->json([
+            'data'        => $plans,
+            'enforcement' => [
+                'mode'         => env('SUBSCRIPTION_ENFORCEMENT', 'off'),
+                'grace_period' => env('SUBSCRIPTION_ENFORCEMENT', 'off') !== 'on',
+            ],
+        ]);
     }
 
     /**
@@ -49,6 +55,12 @@ class SubscriptionController extends Controller
                     'max_listings'    => $sub->plan->feature('max_listings'),
                     'remaining'       => $this->remaining($sub->plan->feature('max_listings'), $usage->listings_posted),
                     'days_until_expiry' => $sub->daysUntilExpiry(),
+                ],
+                'enforcement' => [
+                    // 'off' = grace period: all features free, no limits enforced
+                    // 'on'  = production: limits enforced, /pricing actively sells
+                    'mode'           => env('SUBSCRIPTION_ENFORCEMENT', 'off'),
+                    'grace_period'   => env('SUBSCRIPTION_ENFORCEMENT', 'off') !== 'on',
                 ],
             ],
         ]);
@@ -94,6 +106,23 @@ class SubscriptionController extends Controller
                 'requested_at' => now()->toIso8601String(),
             ],
         ]);
+
+        // Web Push — notify all admins so they can action it from /ar/admin
+        try {
+            $adminIds = \App\Models\User::where('role', 'admin')->pluck('id')->all();
+            if (!empty($adminIds)) {
+                $planLabel = $plan->name_ar ?? $plan->name_en ?? $plan->code;
+                $cycleAr   = $request->billing_cycle === 'yearly' ? 'سنوي' : 'شهري';
+                app(\App\Services\PushNotificationService::class)->notifyUsers($adminIds, [
+                    'title' => 'طلب اشتراك جديد ✨',
+                    'body'  => "{$user->name_ar} يطلب باقة {$planLabel} ({$cycleAr})",
+                    'url'   => '/ar/admin?tab=subscriptions',
+                    'tag'   => 'sub-request-'.$sub->id,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('push (upgrade request): '.$e->getMessage());
+        }
 
         return response()->json([
             'message' => 'تم استلام طلبك. سيتم تفعيل الباقة بعد التأكيد.',

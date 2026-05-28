@@ -140,18 +140,22 @@ class ListingController extends Controller
 
         $user = $request->user();
 
-        // Subscription limit gate — block users who hit their plan's max_listings
-        // for the month, or whose plan doesn't include the requested section (ma).
-        $subs  = app(\App\Services\SubscriptionService::class);
-        $check = $subs->canPostListing($user, $section);
-        if (!$check['allowed']) {
-            return response()->json([
-                'message'     => $check['message'],
-                'reason'      => $check['reason'],
-                'limit'       => $check['limit'],
-                'used'        => $check['used'],
-                'upgrade_url' => '/ar/pricing',
-            ], 402);   // 402 Payment Required — semantically right here
+        // Subscription limit gate — only enforced when SUBSCRIPTION_ENFORCEMENT=on.
+        // During the launch grace period (default) all plans are effectively
+        // unlimited so we can build the user base before charging. Counters
+        // are still tracked in either mode so analytics keep working.
+        $subs = app(\App\Services\SubscriptionService::class);
+        if (env('SUBSCRIPTION_ENFORCEMENT', 'off') === 'on') {
+            $check = $subs->canPostListing($user, $section);
+            if (!$check['allowed']) {
+                return response()->json([
+                    'message'     => $check['message'],
+                    'reason'      => $check['reason'],
+                    'limit'       => $check['limit'],
+                    'used'        => $check['used'],
+                    'upgrade_url' => '/ar/pricing',
+                ], 402);   // 402 Payment Required — semantically right here
+            }
         }
 
         if (! $request->listing_type) {
