@@ -140,6 +140,20 @@ class ListingController extends Controller
 
         $user = $request->user();
 
+        // Subscription limit gate — block users who hit their plan's max_listings
+        // for the month, or whose plan doesn't include the requested section (ma).
+        $subs  = app(\App\Services\SubscriptionService::class);
+        $check = $subs->canPostListing($user, $section);
+        if (!$check['allowed']) {
+            return response()->json([
+                'message'     => $check['message'],
+                'reason'      => $check['reason'],
+                'limit'       => $check['limit'],
+                'used'        => $check['used'],
+                'upgrade_url' => '/ar/pricing',
+            ], 402);   // 402 Payment Required — semantically right here
+        }
+
         if (! $request->listing_type) {
             $request->merge([
                 'listing_type' => match ($section) {
@@ -196,6 +210,14 @@ class ListingController extends Controller
             'is_financing_eligible' => $listing->computeFinancingEligibility(),
             'is_ready_to_operate'   => $listing->computeReadyToOperate(),
         ]);
+
+        // Bump monthly usage counter. Wrapped in try/catch so a subscription
+        // service hiccup never blocks a successful listing creation.
+        try {
+            $subs->incrementListings($user);
+        } catch (\Throwable $e) {
+            \Log::warning('subscription usage bump failed: '.$e->getMessage());
+        }
 
         return response()->json(['data' => $listing, 'message' => 'تم نشر الإعلان بنجاح.'], 201);
     }

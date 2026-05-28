@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\CommentInteractionController;
 use App\Http\Controllers\Api\PushSubscriptionController;
+use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\AdminSubscriptionController;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
@@ -26,6 +28,9 @@ Route::prefix('auth')->group(function () {
 
 // Public stats
 Route::get('stats', [StatsController::class, 'index']);
+
+// Public — list available subscription plans (for /pricing page)
+Route::get('plans', [SubscriptionController::class, 'plans']);
 
 // Public listings (read-only)
 Route::get('listings/featured',      [ListingController::class, 'featured']); // before {id}
@@ -99,6 +104,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('push-subscriptions',       [PushSubscriptionController::class, 'index']);
         Route::post('push-subscriptions',      [PushSubscriptionController::class, 'store']);
         Route::delete('push-subscriptions',    [PushSubscriptionController::class, 'destroy']);
+
+        // Current plan + usage + upgrade requests
+        Route::get('subscription',                 [SubscriptionController::class, 'current']);
+        Route::post('subscription/upgrade-request',[SubscriptionController::class, 'requestUpgrade']);
+        Route::post('subscription/cancel',         [SubscriptionController::class, 'cancel']);
     });
 
     // ─── Admin Routes ─────────────────────────────────────────────────────────
@@ -135,6 +145,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Analytics
         Route::get('analytics',                      [AdminController::class, 'analytics']);
+
+        // Subscriptions & Plans
+        Route::get('subscriptions',                  [AdminSubscriptionController::class, 'index']);
+        Route::get('subscriptions/pending',          [AdminSubscriptionController::class, 'pending']);
+        Route::patch('subscriptions/{id}',           [AdminSubscriptionController::class, 'update']);
+        Route::post('users/{id}/grant-plan',         [AdminSubscriptionController::class, 'grantPlan']);
+        Route::get('plans',                          [AdminSubscriptionController::class, 'plansIndex']);
+        Route::patch('plans/{id}',                   [AdminSubscriptionController::class, 'plansUpdate']);
 
         // Audit log
         Route::get('audit-logs',                     [AdminController::class, 'auditLogs']);
