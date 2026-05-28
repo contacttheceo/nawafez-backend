@@ -135,6 +135,24 @@ class MessageController extends Controller
             ],
         ]);
 
+        // Web Push — fire-and-forget so a push outage never blocks a send
+        try {
+            $sender   = $request->user();
+            $preview  = mb_substr($request->body, 0, 80);
+            $listing  = \App\Models\Listing::find($request->listing_id);
+            app(\App\Services\PushNotificationService::class)->notifyUser(
+                (int) $request->to_user_id,
+                [
+                    'title' => 'رسالة جديدة من '.$sender->name_ar,
+                    'body'  => $preview,
+                    'url'   => '/ar/messages?with='.$sender->id.'&listing='.$request->listing_id,
+                    'tag'   => 'msg-'.$sender->id.'-'.$request->listing_id,
+                ]
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('push (message): '.$e->getMessage());
+        }
+
         return response()->json([
             'message' => 'تم إرسال الرسالة.',
             'data'    => [

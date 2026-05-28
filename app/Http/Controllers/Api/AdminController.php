@@ -316,6 +316,15 @@ class AdminController extends Controller
         try { $this->emailService()->listingApproved($listing); }
         catch (\Throwable $e) { \Log::warning("listingApproved email failed: " . $e->getMessage()); }
 
+        try {
+            app(\App\Services\PushNotificationService::class)->notifyUser($listing->user_id, [
+                'title' => 'تم نشر إعلانك ✓',
+                'body'  => mb_substr($listing->title_ar ?? 'إعلانك', 0, 80),
+                'url'   => '/ar/listings/'.$listing->id,
+                'tag'   => 'listing-status-'.$listing->id,
+            ]);
+        } catch (\Throwable $e) { \Log::warning('push (approve): '.$e->getMessage()); }
+
         return response()->json(['message' => 'تم نشر الإعلان بنجاح.', 'data' => $listing]);
     }
 
@@ -343,6 +352,15 @@ class AdminController extends Controller
 
         try { $this->emailService()->listingRejected($listing, $request->reason); }
         catch (\Throwable $e) { \Log::warning("listingRejected email failed: " . $e->getMessage()); }
+
+        try {
+            app(\App\Services\PushNotificationService::class)->notifyUser($listing->user_id, [
+                'title' => 'تم رفض إعلانك',
+                'body'  => 'السبب: '.mb_substr($request->reason, 0, 90),
+                'url'   => '/ar/dashboard',
+                'tag'   => 'listing-status-'.$listing->id,
+            ]);
+        } catch (\Throwable $e) { \Log::warning('push (reject): '.$e->getMessage()); }
 
         return response()->json(['message' => 'تم رفض الإعلان.']);
     }

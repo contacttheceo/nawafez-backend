@@ -107,6 +107,40 @@ class CommentController extends Controller
 
         $comment->load('user:id,name_ar,name_en,avatar,role,is_trusted_payer');
 
+        // Web Push — notify listing owner (skip if owner commented on own listing
+        // or if replying to own thread)
+        try {
+            $sender   = $request->user();
+            $ownerId  = $listing->user_id;
+            $isReply  = $request->filled('parent_id');
+            // If reply, also notify the parent comment author when different from owner
+            $recipients = [];
+            if ($ownerId !== $sender->id) {
+                $recipients[] = $ownerId;
+            }
+            if ($isReply && isset($parent) && $parent->user_id !== $sender->id) {
+                $recipients[] = $parent->user_id;
+            }
+            $recipients = array_unique($recipients);
+            if (!empty($recipients)) {
+                $title = $isReply
+                    ? 'رد جديد على تعليقك من '.$sender->name_ar
+                    : 'تعليق جديد على إعلانك';
+                $preview = mb_substr($comment->body, 0, 80);
+                app(\App\Services\PushNotificationService::class)->notifyUsers(
+                    $recipients,
+                    [
+                        'title' => $title,
+                        'body'  => $preview,
+                        'url'   => '/ar/listings/'.$listing->id.'#comment-'.$comment->id,
+                        'tag'   => 'comment-'.$listing->id,
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('push (comment): '.$e->getMessage());
+        }
+
         return response()->json([
             'message' => 'تم إضافة التعليق بنجاح.',
             'data'    => $comment,

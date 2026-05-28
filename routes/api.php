@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\CommentInteractionController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
@@ -93,6 +94,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('avatar',                [UserController::class, 'deleteAvatar']);
         Route::post('business-verification',   [UserController::class, 'uploadBusinessVerification']);
         Route::delete('account',               [UserController::class, 'deleteAccount']);
+
+        // Web Push subscriptions (one row per browser/device per user)
+        Route::get('push-subscriptions',       [PushSubscriptionController::class, 'index']);
+        Route::post('push-subscriptions',      [PushSubscriptionController::class, 'store']);
+        Route::delete('push-subscriptions',    [PushSubscriptionController::class, 'destroy']);
     });
 
     // ─── Admin Routes ─────────────────────────────────────────────────────────
