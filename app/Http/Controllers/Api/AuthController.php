@@ -41,6 +41,19 @@ class AuthController extends Controller
             \Log::warning('Registration verification email failed: ' . $e->getMessage());
         }
 
+        // Welcome email to the new user + notification to all admins.
+        // Wrapped separately so one failure doesn't block the other.
+        try {
+            app(\App\Services\AdminEmailService::class)->welcomeUser($user);
+        } catch (\Throwable $e) {
+            \Log::warning('Welcome email failed: ' . $e->getMessage());
+        }
+        try {
+            app(\App\Services\AdminEmailService::class)->newUserRegisteredToAdmin($user);
+        } catch (\Throwable $e) {
+            \Log::warning('Admin new-user email failed: ' . $e->getMessage());
+        }
+
         $token = $user->createToken('nawafez_app')->plainTextToken;
 
         return response()->json([

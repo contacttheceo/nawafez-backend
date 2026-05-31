@@ -223,6 +223,19 @@ class ListingController extends Controller
             \Log::warning('subscription usage bump failed: '.$e->getMessage());
         }
 
+        // Email notifications — owner gets a confirmation if status=active,
+        // admins get a "needs review" email if status=pending_review.
+        try {
+            $emailService = app(\App\Services\AdminEmailService::class);
+            if ($listing->status === 'active') {
+                $emailService->listingPublishedToOwner($listing);
+            } else if ($listing->status === 'pending_review') {
+                $emailService->listingPendingReviewToAdmin($listing);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('listing email notification failed: '.$e->getMessage());
+        }
+
         return response()->json(['data' => $listing, 'message' => 'تم نشر الإعلان بنجاح.'], 201);
     }
 

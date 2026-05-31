@@ -141,6 +141,18 @@ class CommentController extends Controller
             \Log::warning('push (comment): '.$e->getMessage());
         }
 
+        // Email notification — listing owner gets an email when a new comment
+        // is posted (skipped if owner is the comment author).
+        try {
+            $sender = $request->user();
+            if ($listing->user_id !== $sender->id) {
+                app(\App\Services\AdminEmailService::class)
+                    ->newCommentToListingOwner($listing, $comment, $sender);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('comment email failed: '.$e->getMessage());
+        }
+
         return response()->json([
             'message' => 'تم إضافة التعليق بنجاح.',
             'data'    => $comment,
