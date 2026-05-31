@@ -16,10 +16,29 @@ class AdminEmailService
     {
     }
 
+    /**
+     * Gate that decides whether a notification should actually be sent to
+     * this user. Skip if:
+     *   - the user has no email
+     *   - the email is not verified (would bounce or hit Resend reputation)
+     *   - the email is a known internal/system placeholder
+     *
+     * Admin emails bypass this gate (admins are always real verified accounts).
+     */
+    private function shouldEmailUser(?User $user): bool
+    {
+        if (!$user || !$user->email) return false;
+        // never email accounts that never verified — they're either spam or fake
+        if ($user->email_verified_at === null) return false;
+        // sanity: skip internal-only domains
+        if (str_contains($user->email, '@nwafiz-import.local')) return false;
+        return true;
+    }
+
     public function listingApproved(Listing $listing): void
     {
         $user = $listing->user;
-        if (!$user || !$user->email) return;
+        if (!$this->shouldEmailUser($user)) return;
 
         $title       = $listing->title_ar ?? $listing->title_en ?? '—';
         $frontendUrl = env('FRONTEND_URL', 'https://www.nwafizlogi.com');
@@ -46,7 +65,7 @@ class AdminEmailService
     public function listingRejected(Listing $listing, string $reason): void
     {
         $user = $listing->user;
-        if (!$user || !$user->email) return;
+        if (!$this->shouldEmailUser($user)) return;
 
         $title       = $listing->title_ar ?? $listing->title_en ?? '—';
         $frontendUrl = env('FRONTEND_URL', 'https://www.nwafizlogi.com');
@@ -78,7 +97,7 @@ class AdminEmailService
 
     public function verificationApproved(User $user): void
     {
-        if (!$user->email) return;
+        if (!$this->shouldEmailUser($user)) return;
         $frontendUrl = env('FRONTEND_URL', 'https://www.nwafizlogi.com');
 
         $this->mailer->send(
@@ -106,7 +125,7 @@ class AdminEmailService
 
     public function verificationRejected(User $user, string $reason): void
     {
-        if (!$user->email) return;
+        if (!$this->shouldEmailUser($user)) return;
         $frontendUrl = env('FRONTEND_URL', 'https://www.nwafizlogi.com');
         $profileUrl  = "{$frontendUrl}/ar/profile";
         $reasonHtml  = htmlspecialchars($reason, ENT_QUOTES, 'UTF-8');
@@ -136,7 +155,7 @@ class AdminEmailService
 
     public function accountSuspended(User $user, string $reason): void
     {
-        if (!$user->email) return;
+        if (!$this->shouldEmailUser($user)) return;
         $reasonHtml = htmlspecialchars($reason, ENT_QUOTES, 'UTF-8');
 
         $this->mailer->send(
@@ -223,7 +242,7 @@ class AdminEmailService
     public function listingPublishedToOwner(Listing $listing): void
     {
         $user = $listing->user;
-        if (!$user || !$user->email) return;
+        if (!$this->shouldEmailUser($user)) return;
 
         $title = htmlspecialchars($listing->title_ar ?? $listing->title_en ?? '—');
         $url   = "https://www.nwafizlogi.com/ar/listings/{$listing->id}";
@@ -278,7 +297,7 @@ class AdminEmailService
     public function newCommentToListingOwner(Listing $listing, $comment, User $commentAuthor): void
     {
         $owner = $listing->user;
-        if (!$owner || !$owner->email || $owner->id === $commentAuthor->id) return;
+        if (!$this->shouldEmailUser($owner) || $owner->id === $commentAuthor->id) return;
 
         $title   = htmlspecialchars($listing->title_ar ?? $listing->title_en ?? '—');
         $author  = htmlspecialchars($commentAuthor->name_ar ?: $commentAuthor->name_en ?: 'مستخدم');

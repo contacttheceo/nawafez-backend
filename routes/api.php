@@ -49,22 +49,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/me',                   [AuthController::class, 'me']);
     Route::post('auth/resend-verification', [AuthController::class, 'resendVerification']);
 
-    // Listings (write)
-    Route::post('listings',              [ListingController::class, 'store']);
-    Route::post('listings/{id}',         [ListingController::class, 'update']);   // POST for FormData
+    // ─── Verified-only routes: publishing actions require verified email ───
+    Route::middleware('verified')->group(function () {
+        // Listings (write)
+        Route::post('listings',              [ListingController::class, 'store']);
+        Route::post('listings/{id}',         [ListingController::class, 'update']);   // POST for FormData
+        Route::patch('listings/{id}/renew',  [ListingController::class, 'renew']);
+
+        // Bids — submitting an offer also requires verification
+        Route::post('listings/{id}/bid',     [InteractionController::class, 'submitBid']);
+
+        // Comments — posting new comments
+        Route::post('listings/{id}/comments',         [CommentController::class, 'store']);
+    });
+    // ─── End verified-only ───
+
+    // Read/own-management actions OK without verification:
     Route::delete('listings/{id}',       [ListingController::class, 'destroy']);
     Route::patch('listings/{id}/pause',  [ListingController::class, 'pause']);
     Route::patch('listings/{id}/unpause',[ListingController::class, 'unpause']);
-    Route::patch('listings/{id}/renew',  [ListingController::class, 'renew']);
 
-    // Per-listing interactions (RESTful on listing resource)
+    // Per-listing interactions (bookmarks, reports — low-risk)
     Route::post('listings/{id}/bookmark',  [InteractionController::class, 'bookmark']);
     Route::delete('listings/{id}/bookmark',[InteractionController::class, 'removeBookmark']);
-    Route::post('listings/{id}/bid',       [InteractionController::class, 'submitBid']);
     Route::post('listings/{id}/report',    [InteractionController::class, 'report']);
 
-    // Comments
-    Route::post  ('listings/{id}/comments',              [CommentController::class, 'store']);
+    // Deleting own comment also OK
     Route::delete('listings/{id}/comments/{commentId}',  [CommentController::class, 'destroy']);
 
     // Comment interactions (Q&A forum)
@@ -87,7 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Messages
     Route::get('messages',                     [MessageController::class, 'inbox']);
     Route::get('messages/{userId}/{listingId}', [MessageController::class, 'thread']);
-    Route::post('messages',                    [MessageController::class, 'send']);
+    Route::post('messages',                    [MessageController::class, 'send'])->middleware('verified');
 
     // User profile & dashboard
     Route::prefix('user')->group(function () {

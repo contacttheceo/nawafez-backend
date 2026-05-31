@@ -14,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Register custom middleware aliases
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'admin'    => \App\Http\Middleware\EnsureAdmin::class,
+            'verified' => \App\Http\Middleware\EnsureEmailVerified::class,
         ]);
 
         // Trust all proxies (needed for Freehostia shared hosting)
