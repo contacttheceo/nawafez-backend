@@ -289,9 +289,6 @@ class AdminEmailService
                 <div style='background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;'>
                     {$referralUrl}
                 </div>
-                <p style='margin:14px 0 0;font-size:11px;opacity:0.85;'>
-                    💎 <strong>للأوائل فقط</strong>: من يدعو 10+ أصدقاء يحصل على <strong>Pro مدى الحياة</strong>.
-                </p>
             </div>
 
             <!-- Quick tips -->
