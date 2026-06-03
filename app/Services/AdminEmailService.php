@@ -469,7 +469,7 @@ class AdminEmailService
         <div dir='rtl' style='font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
             <div style='text-align:center;margin-bottom:28px;padding:18px;background:white;border-radius:10px;'>
                 <img src='{$logoUrl}'
-                     alt='نوافذ — Nawafez Logistics'
+                     alt='نوافذ — Nwafiz Logistics'
                      width='140'
                      style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
