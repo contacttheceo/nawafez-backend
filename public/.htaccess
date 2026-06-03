@@ -2,6 +2,11 @@ Options -MultiViews -Indexes
 
 RewriteEngine On
 
+# Allow Let's Encrypt HTTP-01 domain validation — must serve the challenge
+# file directly from disk without going through Laravel's index.php router.
+# This rule MUST be first so it short-circuits all later rewrites.
+RewriteRule ^\.well-known/ - [L]
+
 # Handle Authorization Header
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
