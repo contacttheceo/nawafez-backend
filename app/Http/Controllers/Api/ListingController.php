@@ -86,6 +86,33 @@ class ListingController extends Controller
         return response()->json(['data' => $listings]);
     }
 
+    // GET /api/listings/{id}/similar
+    // Returns up to 6 active listings from the same section, same city when
+    // possible, excluding the current one. Used for "similar listings" rail
+    // on the detail page — boosts internal linking + on-site engagement.
+    public function similar(int $id): JsonResponse
+    {
+        $listing = Listing::findOrFail($id);
+
+        $base = Listing::with('user:id,name_ar,name_en,role,is_trusted_payer,avatar')
+            ->active()
+            ->where('id', '!=', $id)
+            ->where('section', $listing->section);
+
+        // Prefer same city; fall back to same section if not enough hits
+        $sameCity = (clone $base)->where('city', $listing->city)->limit(6)->get();
+
+        if ($sameCity->count() < 4) {
+            $extras = (clone $base)
+                ->whereNotIn('id', $sameCity->pluck('id')->all())
+                ->limit(6 - $sameCity->count())
+                ->get();
+            $sameCity = $sameCity->concat($extras);
+        }
+
+        return response()->json(['data' => $sameCity->values()]);
+    }
+
     // GET /api/listings/{id}
     public function show(Request $request, int $id): JsonResponse
     {

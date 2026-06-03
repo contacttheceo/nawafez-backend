@@ -36,6 +36,7 @@ Route::get('plans', [SubscriptionController::class, 'plans']);
 Route::get('listings/featured',      [ListingController::class, 'featured']); // before {id}
 Route::get('listings',               [ListingController::class, 'index']);
 Route::get('listings/{id}',          [ListingController::class, 'show']);
+Route::get('listings/{id}/similar',  [ListingController::class, 'similar']);
 Route::post('listings/{id}/view',    [ListingController::class, 'recordView']);
 Route::get('listings/{id}/bids',     [InteractionController::class, 'getBids']);  // public summary; owner gets full list
 Route::get('listings/{id}/comments', [CommentController::class, 'index']);         // public read
