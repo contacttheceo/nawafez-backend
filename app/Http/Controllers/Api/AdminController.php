@@ -209,6 +209,114 @@ class AdminController extends Controller
         ]);
     }
 
+    // PATCH /api/admin/users/{id}/verify-email
+    // Manual override for when a user can't receive the verification email
+    // (wrong address, mail provider blocks, deliverability issues, etc.)
+    // Support workflow: user contacts support → admin verifies email manually.
+    public function manuallyVerifyEmail(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->email_verified_at !== null) {
+            return response()->json([
+                'message' => 'هذا المستخدم متحقّق بالفعل.',
+                'data'    => $user->only(['id', 'email', 'email_verified_at']),
+            ], 422);
+        }
+
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        AuditLogger::log(
+            $request->user(),
+            'user.manually_verify_email',
+            'user',
+            $user->id,
+            [
+                'email' => $user->email,
+                'note'  => $request->input('note', 'Manual verification by admin'),
+            ],
+            $request
+        );
+
+        return response()->json([
+            'message' => "تم التحقق من بريد المستخدم {$user->email} يدوياً.",
+            'data'    => $user->only(['id', 'email', 'email_verified_at']),
+        ]);
+    }
+
+    // POST /api/admin/users/{id}/resend-verification
+    // Admin triggers a fresh verification email to a user (e.g. they say
+    // they didn't receive it). Bypasses the user's session — admin uses
+    // their own privilege.
+    public function adminResendVerification(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->email_verified_at !== null) {
+            return response()->json([
+                'message' => 'هذا المستخدم متحقّق بالفعل، لا حاجة لإعادة الإرسال.',
+            ], 422);
+        }
+
+        try {
+            // Reuse the private helper via reflection-safe wrapper: call the
+            // controller through the container. AuthController exposes this
+            // intent via resendVerification() but it expects $request->user().
+            // We'll inline the email send here to keep the call simple.
+            $frontendUrl = rtrim(env('FRONTEND_URL', 'https://www.nwafizlogi.com'), '/');
+            $verifyUrl   = "{$frontendUrl}/ar/auth/verify-email?id={$user->id}&hash=" . sha1($user->email);
+            $mailer      = new \App\Services\ResendMailer();
+            $sent        = $mailer->send(
+                $user->email,
+                'تحقق من بريدك الإلكتروني — نوافذ',
+                $this->verificationEmailHtml($verifyUrl, $user->name_ar)
+            );
+
+            AuditLogger::log(
+                $request->user(),
+                'user.admin_resend_verification',
+                'user',
+                $user->id,
+                ['email' => $user->email, 'sent' => $sent],
+                $request
+            );
+
+            return response()->json([
+                'message' => $sent
+                    ? "تم إرسال رابط التحقق مجدداً إلى {$user->email}."
+                    : 'فشل الإرسال — راجع سجل الأخطاء.',
+                'sent'    => $sent,
+            ], $sent ? 200 : 500);
+        } catch (\Throwable $e) {
+            \Log::error('admin resend verification failed: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'حدث خطأ أثناء الإرسال: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function verificationEmailHtml(string $url, ?string $name): string
+    {
+        $safeName = htmlspecialchars($name ?: 'مستخدم نوافذ', ENT_QUOTES, 'UTF-8');
+        $safeUrl  = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+        return "
+        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
+            <div style='text-align:center;margin-bottom:24px;'>
+                <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
+                <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
+            </div>
+            <h3 style='color:#0a2342;'>مرحباً {$safeName} 👋</h3>
+            <p style='color:#444;line-height:1.7;'>أرسلت إدارة نوافذ رابط التحقق إليك. اضغط لتفعيل حسابك:</p>
+            <div style='text-align:center;margin:28px 0;'>
+                <a href='{$safeUrl}' style='background:#10b981;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
+                    ✓ تفعيل الحساب
+                </a>
+            </div>
+            <p style='color:#666;font-size:13px;'>لم يعمل الزر؟ انسخ الرابط:</p>
+            <p style='background:white;border:1px solid #eee;padding:10px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#0a2342;'>{$safeUrl}</p>
+        </div>";
+    }
+
     // GET /api/admin/verifications
     public function pendingVerifications(): JsonResponse
     {

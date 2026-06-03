@@ -34,11 +34,19 @@ class AuthController extends Controller
             'role'     => 'individual',
         ]);
 
-        // Send verification email via Resend HTTP API
+        // Send verification email via Resend HTTP API.
+        // Note: ResendMailer already logs success/failure; we add an explicit
+        // marker here so the registration flow can be traced end-to-end when
+        // users complain "the email didn't arrive."
         try {
+            \Log::info("Registration: sending verification email to {$user->email} (user_id={$user->id})");
             $this->sendVerificationEmail($user);
         } catch (\Throwable $e) {
-            \Log::warning('Registration verification email failed: ' . $e->getMessage());
+            \Log::error('Registration verification email exception: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+                'trace'   => substr($e->getTraceAsString(), 0, 500),
+            ]);
         }
 
         // Welcome email to the new user + notification to all admins.
@@ -120,8 +128,9 @@ class AuthController extends Controller
 
         // Create password reset token
         $token       = Password::createToken($user);
-        $frontendUrl = env('FRONTEND_URL', 'https://nawafez.vercel.app');
-        $resetUrl    = "{$frontendUrl}/auth/reset-password?token={$token}&email={$user->email}";
+        $frontendUrl = rtrim(env('FRONTEND_URL', 'https://www.nwafizlogi.com'), '/');
+        // Always include locale prefix — Next.js next-intl routing requires it
+        $resetUrl    = "{$frontendUrl}/ar/auth/reset-password?token={$token}&email={$user->email}";
 
         // Send via Resend HTTP API (bypasses SMTP — uses HTTPS port 443)
         $mailer = new ResendMailer();
@@ -198,17 +207,27 @@ class AuthController extends Controller
 
     private function sendVerificationEmail(User $user): void
     {
-        $frontendUrl = env('FRONTEND_URL', 'https://nawafez.vercel.app');
+        $frontendUrl = rtrim(env('FRONTEND_URL', 'https://www.nwafizlogi.com'), '/');
         $id          = $user->getKey();
         $hash        = sha1($user->email);
-        $verifyUrl   = "{$frontendUrl}/auth/verify-email?id={$id}&hash={$hash}";
+        // Always include locale prefix — Next.js next-intl routing requires it,
+        // otherwise the link 404's or loops in middleware.
+        $verifyUrl   = "{$frontendUrl}/ar/auth/verify-email?id={$id}&hash={$hash}";
 
         $mailer = new ResendMailer();
-        $mailer->send(
+        $sent = $mailer->send(
             $user->email,
             'تحقق من بريدك الإلكتروني — نوافذ',
             $this->verifyEmailHtml($verifyUrl, $user->name_ar)
         );
+
+        // Log the result + URL for debugging — when users complain the email
+        // didn't arrive, this is the first place we look.
+        if ($sent) {
+            \Log::info("Verification email sent to {$user->email} (user_id={$id}) url={$verifyUrl}");
+        } else {
+            \Log::error("Verification email FAILED for {$user->email} (user_id={$id})");
+        }
     }
 
     private function resetPasswordEmailHtml(string $url): string
@@ -234,21 +253,43 @@ class AuthController extends Controller
 
     private function verifyEmailHtml(string $url, string $name): string
     {
+        $safeName = htmlspecialchars($name ?: 'مستخدم نوافذ', ENT_QUOTES, 'UTF-8');
+        $safeUrl  = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+
         return "
-        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
+        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
             <div style='text-align:center;margin-bottom:24px;'>
                 <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
                 <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
             </div>
-            <h3 style='color:#0a2342;'>مرحباً {$name}،</h3>
-            <p style='color:#444;line-height:1.6;'>شكراً لتسجيلك في منصة نوافذ. اضغط على الزر أدناه لتفعيل حسابك:</p>
+
+            <h3 style='color:#0a2342;'>مرحباً {$safeName} 👋</h3>
+
+            <p style='color:#444;line-height:1.7;'>
+                شكراً لانضمامك إلى منصة نوافذ. لإكمال إنشاء حسابك ولتتمكّن من نشر إعلاناتك،
+                <strong>يرجى التحقق من بريدك الإلكتروني</strong> بالضغط على الزر أدناه:
+            </p>
+
             <div style='text-align:center;margin:28px 0;'>
-                <a href='{$url}' style='background:#10b981;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;'>
-                    تفعيل الحساب
+                <a href='{$safeUrl}' style='background:#10b981;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
+                    ✓ تفعيل الحساب
                 </a>
             </div>
-            <p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:16px;'>
-                إذا لم تسجّل في نوافذ، يمكنك تجاهل هذه الرسالة.
+
+            <p style='color:#666;font-size:13px;line-height:1.7;margin-top:24px;'>
+                <strong>لم يعمل الزر؟</strong> انسخ هذا الرابط والصقه في متصفّحك:
+            </p>
+            <p style='background:white;border:1px solid #eee;padding:10px 12px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#0a2342;'>
+                {$safeUrl}
+            </p>
+
+            <p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:16px;margin-top:24px;line-height:1.6;'>
+                ⚠️ <strong>مهم:</strong> لا يمكنك نشر إعلانات أو إرسال رسائل قبل التحقق من بريدك.<br>
+                🔒 إذا لم تسجّل في نوافذ، تجاهل هذه الرسالة بأمان.
+            </p>
+
+            <p style='color:#aaa;font-size:11px;text-align:center;margin-top:16px;'>
+                للدعم: <a href='mailto:support@nwafizlogi.com' style='color:#10b981;text-decoration:none;'>support@nwafizlogi.com</a>
             </p>
         </div>";
     }
