@@ -299,11 +299,11 @@ class AdminController extends Controller
     {
         $safeName = htmlspecialchars($name ?: 'مستخدم نوافذ', ENT_QUOTES, 'UTF-8');
         $safeUrl  = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+        $logo     = \App\Services\AdminEmailService::LOGO_URL;
         return "
         <div dir='rtl' style='font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
-            <div style='text-align:center;margin-bottom:24px;'>
-                <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
-                <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
+            <div style='text-align:center;margin-bottom:28px;padding:18px;background:white;border-radius:10px;'>
+                <img src='{$logo}' alt='نوافذ' width='140' style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
             <h3 style='color:#0a2342;'>مرحباً {$safeName} 👋</h3>
             <p style='color:#444;line-height:1.7;'>أرسلت إدارة نوافذ رابط التحقق إليك. اضغط لتفعيل حسابك:</p>
@@ -315,6 +315,61 @@ class AdminController extends Controller
             <p style='color:#666;font-size:13px;'>لم يعمل الزر؟ انسخ الرابط:</p>
             <p style='background:white;border:1px solid #eee;padding:10px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#0a2342;'>{$safeUrl}</p>
         </div>";
+    }
+
+    /**
+     * POST /api/admin/users/{id}/activate
+     *
+     * Full ceremonial activation: silently marks email as verified (if
+     * not already), then sends the beautiful welcome-and-features email
+     * with referral link. The "soft launch" experience for any user the
+     * admin wants to bring on board personally.
+     *
+     * Works for ANY account regardless of current state — the email is
+     * always informative, and verification is idempotent.
+     */
+    public function activateAccount(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        $wasAlreadyVerified = $user->email_verified_at !== null;
+        if (!$wasAlreadyVerified) {
+            $user->forceFill(['email_verified_at' => now()])->save();
+        }
+
+        // Fire the welcome email — wrapped in try/catch so a Resend hiccup
+        // doesn't block the verification.
+        $emailSent = false;
+        try {
+            app(\App\Services\AdminEmailService::class)->accountActivated($user);
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            \Log::error('activateAccount email failed: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+            ]);
+        }
+
+        AuditLogger::log(
+            $request->user(),
+            'user.activate',
+            'user',
+            $user->id,
+            [
+                'email'                 => $user->email,
+                'was_already_verified'  => $wasAlreadyVerified,
+                'welcome_email_sent'    => $emailSent,
+            ],
+            $request
+        );
+
+        return response()->json([
+            'message' => $emailSent
+                ? "تم تفعيل حساب {$user->email} وإرسال رسالة الترحيب."
+                : "تم تفعيل الحساب لكن فشل إرسال الإيميل — راجع السجل.",
+            'data'    => $user->only(['id', 'email', 'email_verified_at']),
+            'email_sent' => $emailSent,
+        ]);
     }
 
     // GET /api/admin/verifications

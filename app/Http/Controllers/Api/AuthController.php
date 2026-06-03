@@ -232,20 +232,23 @@ class AuthController extends Controller
 
     private function resetPasswordEmailHtml(string $url): string
     {
+        $logo = \App\Services\AdminEmailService::LOGO_URL;
+        $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
         return "
-        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
-            <div style='text-align:center;margin-bottom:24px;'>
-                <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
-                <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
+        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
+            <div style='text-align:center;margin-bottom:28px;padding:18px;background:white;border-radius:10px;'>
+                <img src='{$logo}' alt='نوافذ' width='140' style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
-            <h3 style='color:#0a2342;'>إعادة تعيين كلمة المرور</h3>
-            <p style='color:#444;line-height:1.6;'>تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك. اضغط على الزر أدناه للمتابعة:</p>
+            <h3 style='color:#0a2342;'>🔐 إعادة تعيين كلمة المرور</h3>
+            <p style='color:#444;line-height:1.7;'>تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك على نوافذ. اضغط على الزر أدناه للمتابعة:</p>
             <div style='text-align:center;margin:28px 0;'>
-                <a href='{$url}' style='background:#0a2342;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;'>
+                <a href='{$safeUrl}' style='background:#0a2342;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
                     إعادة تعيين كلمة المرور
                 </a>
             </div>
-            <p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:16px;'>
+            <p style='color:#666;font-size:13px;'>لم يعمل الزر؟ انسخ الرابط:</p>
+            <p style='background:white;border:1px solid #eee;padding:10px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#0a2342;'>{$safeUrl}</p>
+            <p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:16px;margin-top:24px;'>
                 إذا لم تطلب هذا، يمكنك تجاهل الرسالة. الرابط صالح لمدة 60 دقيقة فقط.
             </p>
         </div>";
@@ -255,12 +258,12 @@ class AuthController extends Controller
     {
         $safeName = htmlspecialchars($name ?: 'مستخدم نوافذ', ENT_QUOTES, 'UTF-8');
         $safeUrl  = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+        $logo     = \App\Services\AdminEmailService::LOGO_URL;
 
         return "
-        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
-            <div style='text-align:center;margin-bottom:24px;'>
-                <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
-                <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
+        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
+            <div style='text-align:center;margin-bottom:28px;padding:18px;background:white;border-radius:10px;'>
+                <img src='{$logo}' alt='نوافذ' width='140' style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
 
             <h3 style='color:#0a2342;'>مرحباً {$safeName} 👋</h3>

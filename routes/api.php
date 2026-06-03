@@ -131,6 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('users/{id}/trusted-payer',     [AdminController::class, 'toggleTrustedPayer']);
         Route::patch('users/{id}/verify-email',      [AdminController::class, 'manuallyVerifyEmail']);
         Route::post ('users/{id}/resend-verification', [AdminController::class, 'adminResendVerification']);
+        Route::post ('users/{id}/activate',          [AdminController::class, 'activateAccount']);
         Route::patch('users/{id}/suspend',           [AdminController::class, 'suspendUser']);
         Route::patch('users/{id}/unsuspend',         [AdminController::class, 'unsuspendUser']);
         Route::delete('users/{id}',                  [AdminController::class, 'deleteUser']);

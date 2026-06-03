@@ -179,6 +179,149 @@ class AdminEmailService
         );
     }
 
+    /**
+     * Sent when an admin "activates" an account from the admin panel.
+     * Different from the simple welcome email — this is the full marketing
+     * pitch + features showcase + referral incentive. Designed to convert
+     * a freshly-verified user into an actively-posting user.
+     *
+     * The "ceremonial" version, fired by admin action, not auto-on-register.
+     */
+    public function accountActivated(User $user): void
+    {
+        // No verification gate here — admin explicitly chose to send this.
+        if (!$user || !$user->email) return;
+
+        $name        = htmlspecialchars($user->name_ar ?: $user->name_en ?: 'مستخدم نوافذ', ENT_QUOTES, 'UTF-8');
+        $userId      = $user->id;
+        $referralUrl = "https://www.nwafizlogi.com/ar/auth/register?ref={$userId}";
+        $browseUrl   = "https://www.nwafizlogi.com/ar/listings";
+        $postUrl     = "https://www.nwafizlogi.com/ar/listings/create";
+
+        $body = "
+            <!-- Big welcome -->
+            <div style='text-align:center;margin-bottom:24px;'>
+                <div style='font-size:48px;line-height:1;margin-bottom:8px;'>🎉</div>
+                <h2 style='color:#0a2342;font-size:24px;margin:0 0 8px;'>تم تفعيل حسابك يا {$name}!</h2>
+                <p style='color:#666;font-size:14px;margin:0;line-height:1.6;'>
+                    أهلاً بك في عائلة <strong>نوافذ</strong> — منصة اللوجستيك B2B الأولى في السعودية.
+                </p>
+            </div>
+
+            <!-- Primary CTA -->
+            <div style='text-align:center;margin:28px 0;'>
+                <a href='{$postUrl}' style='background:#10b981;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;box-shadow:0 4px 12px rgba(16,185,129,0.25);'>
+                    🚀 أنشر إعلانك الأول
+                </a>
+            </div>
+
+            <p style='color:#666;font-size:13px;text-align:center;margin:-12px 0 20px;'>
+                أو <a href='{$browseUrl}' style='color:#10b981;text-decoration:none;font-weight:bold;'>تصفّح الإعلانات الموجودة</a>
+            </p>
+
+            <hr style='border:none;border-top:1px solid #eee;margin:24px 0;'>
+
+            <!-- Features showcase -->
+            <h3 style='color:#0a2342;font-size:18px;margin-bottom:16px;'>✨ كل هذا متاح لك مجاناً الآن:</h3>
+
+            <table style='width:100%;border-collapse:collapse;margin-bottom:16px;'>
+                <tr>
+                    <td style='padding:12px 8px;vertical-align:top;width:32px;'>
+                        <div style='font-size:22px;'>🚛</div>
+                    </td>
+                    <td style='padding:12px 8px;'>
+                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>تصفّح آلاف الفرص اللوجستية</p>
+                        <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
+                            أساطيل، عقود تشغيلية، بيع كيانات (M&A)، وظائف، ومنتدى استشارات — كله في مكان واحد.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>📢</div></td>
+                    <td style='padding:12px 8px;'>
+                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>انشر إعلاناتك مجاناً</p>
+                        <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
+                            صور، تفاصيل، سعر، فلاتر ذكية — يصل لمشترين جدّيين في السعودية.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>💬</div></td>
+                    <td style='padding:12px 8px;'>
+                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>تواصل مباشر بدون كشف رقمك</p>
+                        <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
+                            رسائل داخلية آمنة، أو تواصل بالواتساب عند الجدّية فقط.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>🤖</div></td>
+                    <td style='padding:12px 8px;'>
+                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>ذكاء اصطناعي يساعدك</p>
+                        <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
+                            AI يكتب إعلانك من وصف بسيط، ويحلّل العقود قبل التوقيع.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>✓</div></td>
+                    <td style='padding:12px 8px;'>
+                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>وثّق نشاطك التجاري</p>
+                        <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
+                            ارفع سجلك التجاري واحصل على شارة <strong>'موثّق'</strong> — تزيد ثقة المشترين × 3.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Referral program (the big motivator) -->
+            <div style='background:linear-gradient(135deg,#10b981 0%,#0d9b6c 100%);border-radius:12px;padding:24px;margin:24px 0;color:white;'>
+                <h3 style='margin:0 0 10px;font-size:18px;'>🌱 ادعُ زملاءك واكسب مكافآت</h3>
+                <p style='margin:0 0 14px;font-size:13px;line-height:1.7;opacity:0.95;'>
+                    شارك رابطك الخاص — كل صديق ينضم، تكسب:
+                </p>
+                <ul style='margin:0 0 16px;padding-inline-start:18px;font-size:13px;line-height:1.9;'>
+                    <li>🎖️ شارة <strong>'السفير'</strong> دائمة بجانب اسمك</li>
+                    <li>📈 إعلانك في <strong>قسم 'المميّز'</strong> لمدة 7 أيام</li>
+                    <li>🎁 <strong>شهر Pro مجاناً</strong> عند تفعيل التسعير (قيمته 299 ر.س)</li>
+                </ul>
+                <p style='margin:0 0 8px;font-size:12px;opacity:0.85;'>رابط دعوتك الخاص:</p>
+                <div style='background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;'>
+                    {$referralUrl}
+                </div>
+                <p style='margin:14px 0 0;font-size:11px;opacity:0.85;'>
+                    💎 <strong>للأوائل فقط</strong>: من يدعو 10+ أصدقاء يحصل على <strong>Pro مدى الحياة</strong>.
+                </p>
+            </div>
+
+            <!-- Quick tips -->
+            <div style='background:#fef3c7;border-radius:8px;padding:16px;margin:20px 0;border-inline-start:4px solid #f59e0b;'>
+                <p style='margin:0 0 6px;color:#92400e;font-weight:bold;font-size:13px;'>💡 نصيحة سريعة</p>
+                <p style='margin:0;color:#78350f;font-size:12px;line-height:1.7;'>
+                    الإعلانات بصور حقيقية تحصل على <strong>تواصل أكثر بـ 5 مرّات</strong> من الإعلانات بدون صور.
+                    حاول تنشر إعلانك الأول بـ 2-3 صور واضحة.
+                </p>
+            </div>
+
+            <!-- Secondary CTAs -->
+            <div style='text-align:center;margin:24px 0 16px;'>
+                <a href='{$postUrl}' style='background:#0a2342;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;margin:4px;'>
+                    📢 أنشر إعلاناً
+                </a>
+                <a href='{$browseUrl}' style='background:white;color:#0a2342;border:1px solid #e5e7eb;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;margin:4px;'>
+                    🔍 تصفّح السوق
+                </a>
+            </div>
+
+            <p style='color:#888;font-size:12px;text-align:center;margin-top:24px;line-height:1.7;'>
+                لو احتجت أي مساعدة، نحن هنا:<br>
+                <a href='mailto:support@nwafizlogi.com' style='color:#10b981;text-decoration:none;font-weight:bold;'>support@nwafizlogi.com</a>
+            </p>
+        ";
+
+        $this->mailer->send($user->email, '🎉 مرحباً بك في نوافذ — حسابك مفعّل!', $this->wrap($body));
+    }
+
     // ─── New: user registration ─────────────────────────────────────────────
     public function welcomeUser(User $user): void
     {
@@ -321,20 +464,29 @@ class AdminEmailService
         $this->mailer->send($owner->email, "💬 تعليق جديد على «{$title}»", $this->wrap($body));
     }
 
-    /** Reusable HTML wrapper */
+    /** Reusable HTML wrapper — uses the actual brand logo image. */
     private function wrap(string $body): string
     {
+        $logoUrl = self::LOGO_URL;
         return "
-        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
-            <div style='text-align:center;margin-bottom:24px;'>
-                <div style='display:inline-block;background:#0a2342;color:white;width:48px;height:48px;border-radius:10px;font-size:24px;font-weight:900;line-height:48px;'>ن</div>
-                <h2 style='color:#0a2342;margin:12px 0 4px;'>نوافذ</h2>
+        <div dir='rtl' style='font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;'>
+            <div style='text-align:center;margin-bottom:28px;padding:18px;background:white;border-radius:10px;'>
+                <img src='{$logoUrl}'
+                     alt='نوافذ — Nawafez Logistics'
+                     width='140'
+                     style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
             {$body}
-            <hr style='border:none;border-top:1px solid #eee;margin:24px 0;'>
-            <p style='color:#aaa;font-size:11px;text-align:center;'>
-                نوافذ — منصة اللوجستيك B2B في السعودية | <a href='https://www.nwafizlogi.com' style='color:#aaa;'>www.nwafizlogi.com</a>
+            <hr style='border:none;border-top:1px solid #eee;margin:28px 0 16px;'>
+            <p style='color:#aaa;font-size:11px;text-align:center;line-height:1.6;'>
+                <strong>نوافذ</strong> — منصة اللوجستيك B2B في السعودية<br>
+                <a href='https://www.nwafizlogi.com' style='color:#10b981;text-decoration:none;'>www.nwafizlogi.com</a>
+                &nbsp;·&nbsp;
+                <a href='mailto:support@nwafizlogi.com' style='color:#10b981;text-decoration:none;'>support@nwafizlogi.com</a>
             </p>
         </div>";
     }
+
+    /** Public so it can be reused by other email-producing services. */
+    public const LOGO_URL = 'https://www.nwafizlogi.com/logo.png';
 }
