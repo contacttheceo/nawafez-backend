@@ -461,6 +461,131 @@ class AdminEmailService
         $this->mailer->send($owner->email, "💬 تعليق جديد على «{$title}»", $this->wrap($body));
     }
 
+    /**
+     * Daily activity digest sent to all admins at 08:00 Asia/Riyadh.
+     *
+     * $stats shape:
+     *   - date_label: string (e.g. "الإثنين 8 يونيو 2026")
+     *   - new_users: int
+     *   - new_listings: int
+     *   - pending_review: int
+     *   - listing_views_24h: int      (sum of views_count delta — approximate)
+     *   - total_users: int
+     *   - total_active_listings: int
+     *   - section_breakdown: array<string, int>  (e.g. ['fleet' => 3, 'jobs' => 1])
+     *   - top_listings: Collection<Listing>      (top 5 by views_count, with id/title)
+     */
+    public function adminDailyDigest(array $stats): void
+    {
+        $admins = User::where('role', 'admin')
+            ->whereNotNull('email')->pluck('email')->all();
+        if (empty($admins)) return;
+
+        $date            = htmlspecialchars($stats['date_label']);
+        $newUsers        = (int) ($stats['new_users'] ?? 0);
+        $newListings     = (int) ($stats['new_listings'] ?? 0);
+        $pendingReview   = (int) ($stats['pending_review'] ?? 0);
+        $totalUsers      = (int) ($stats['total_users'] ?? 0);
+        $totalActive     = (int) ($stats['total_active_listings'] ?? 0);
+        $listingViews    = (int) ($stats['listing_views_24h'] ?? 0);
+        $sectionLabels   = [
+            'ma' => 'استحواذ ودمج', 'fleet' => 'أسطول', 'contracts' => 'عقود',
+            'jobs' => 'توظيف', 'forum' => 'منتدى',
+        ];
+
+        // Section breakdown rows
+        $sectionRows = '';
+        foreach (($stats['section_breakdown'] ?? []) as $sec => $count) {
+            $label = htmlspecialchars($sectionLabels[$sec] ?? $sec);
+            $sectionRows .= "<tr>
+                <td style='padding:6px 8px;color:#555;'>{$label}</td>
+                <td style='padding:6px 8px;text-align:start;font-weight:bold;color:#0a2342;'>{$count}</td>
+            </tr>";
+        }
+        if ($sectionRows === '') {
+            $sectionRows = "<tr><td colspan='2' style='padding:8px;color:#999;text-align:center;'>لا توجد إعلانات جديدة اليوم</td></tr>";
+        }
+
+        // Top-viewed listings rows
+        $topRows = '';
+        foreach (($stats['top_listings'] ?? []) as $l) {
+            $title = htmlspecialchars(mb_substr($l->title_ar ?? $l->title_en ?? '—', 0, 60));
+            $views = (int) ($l->views_count ?? 0);
+            $url   = "https://www.nwafizlogi.com/ar/listings/{$l->id}";
+            $topRows .= "<tr>
+                <td style='padding:6px 8px;'><a href='{$url}' style='color:#0a2342;text-decoration:none;'>{$title}</a></td>
+                <td style='padding:6px 8px;text-align:start;color:#10b981;font-weight:bold;'>{$views} 👁</td>
+            </tr>";
+        }
+        if ($topRows === '') {
+            $topRows = "<tr><td colspan='2' style='padding:8px;color:#999;text-align:center;'>لا توجد بيانات بعد</td></tr>";
+        }
+
+        $body = "
+            <h2 style='color:#0a2342;margin:0 0 4px;'>📊 ملخص نشاط نوافذ</h2>
+            <p style='color:#888;font-size:13px;margin:0 0 24px;'>{$date}</p>
+
+            <!-- KPI cards -->
+            <table style='width:100%;border-collapse:separate;border-spacing:8px 0;margin-bottom:20px;'>
+                <tr>
+                    <td style='background:#10b981;color:white;padding:16px;border-radius:10px;text-align:center;width:33%;'>
+                        <div style='font-size:11px;opacity:0.85;'>مستخدمون جدد</div>
+                        <div style='font-size:26px;font-weight:bold;line-height:1.1;margin-top:6px;'>{$newUsers}</div>
+                    </td>
+                    <td style='background:#0a2342;color:white;padding:16px;border-radius:10px;text-align:center;width:33%;'>
+                        <div style='font-size:11px;opacity:0.85;'>إعلانات جديدة</div>
+                        <div style='font-size:26px;font-weight:bold;line-height:1.1;margin-top:6px;'>{$newListings}</div>
+                    </td>
+                    <td style='background:#f59e0b;color:white;padding:16px;border-radius:10px;text-align:center;width:33%;'>
+                        <div style='font-size:11px;opacity:0.85;'>قيد المراجعة</div>
+                        <div style='font-size:26px;font-weight:bold;line-height:1.1;margin-top:6px;'>{$pendingReview}</div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Totals strip -->
+            <div style='background:white;padding:14px 16px;border-radius:10px;margin-bottom:20px;border:1px solid #eee;'>
+                <table style='width:100%;font-size:13px;'>
+                    <tr>
+                        <td style='color:#666;'>إجمالي المستخدمين</td>
+                        <td style='text-align:start;font-weight:bold;color:#0a2342;'>{$totalUsers}</td>
+                    </tr>
+                    <tr>
+                        <td style='color:#666;padding-top:6px;'>إعلانات نشطة</td>
+                        <td style='text-align:start;font-weight:bold;color:#0a2342;padding-top:6px;'>{$totalActive}</td>
+                    </tr>
+                    <tr>
+                        <td style='color:#666;padding-top:6px;'>مشاهدات الإعلانات (24س)</td>
+                        <td style='text-align:start;font-weight:bold;color:#0a2342;padding-top:6px;'>{$listingViews}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Section breakdown -->
+            <h3 style='color:#0a2342;font-size:14px;margin:24px 0 8px;'>📂 الإعلانات الجديدة حسب القسم</h3>
+            <table style='width:100%;background:white;border:1px solid #eee;border-radius:10px;overflow:hidden;font-size:13px;'>
+                {$sectionRows}
+            </table>
+
+            <!-- Top viewed listings -->
+            <h3 style='color:#0a2342;font-size:14px;margin:24px 0 8px;'>🔥 أعلى الإعلانات مشاهدةً</h3>
+            <table style='width:100%;background:white;border:1px solid #eee;border-radius:10px;overflow:hidden;font-size:13px;'>
+                {$topRows}
+            </table>
+
+            <div style='text-align:center;margin:28px 0 0;'>
+                <a href='https://www.nwafizlogi.com/ar/admin'
+                   style='background:#0a2342;color:white;padding:11px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;'>
+                    لوحة الإدارة
+                </a>
+            </div>";
+
+        $subject = "📊 تقرير نوافذ اليومي — {$date}";
+        foreach ($admins as $adminEmail) {
+            $this->mailer->send($adminEmail, $subject, $this->wrap($body));
+        }
+    }
+
     /** Reusable HTML wrapper — uses the actual brand logo image. */
     private function wrap(string $body): string
     {
