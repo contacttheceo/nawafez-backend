@@ -348,6 +348,120 @@ class AdminEmailService
         $this->mailer->send($user->email, 'أهلاً بك في نوافذ 🎉', $this->wrap($body));
     }
 
+    // ─── Onboarding drip (day 2, 5, 9, 14) ─────────────────────────────────
+    // Each method checks shouldEmailUser() so unverified accounts get skipped.
+
+    /** Day 2 — nudge for users who haven't posted a listing yet. */
+    public function onboardingNudge(User $user): void
+    {
+        if (!$this->shouldEmailUser($user)) return;
+        $name = htmlspecialchars($user->name_ar ?: $user->name_en ?: 'مستخدم نوافذ');
+        $body = "
+            <h3 style='color:#0a2342;'>🚛 خمس دقائق = إعلانك الأول على نوافذ</h3>
+            <p style='color:#444;line-height:1.8;'>
+                أهلاً {$name}،<br>
+                لاحظنا أنك لم تنشر إعلانك الأول بعد. ربما أنت تستكشف، وهذا طبيعي تماماً.
+            </p>
+            <p style='color:#444;line-height:1.8;'>هل عندك:</p>
+            <ul style='color:#444;line-height:1.9;'>
+                <li>شاحنة عاطلة في الجراج؟</li>
+                <li>خدمة نقل تقدمها؟</li>
+                <li>وظيفة شاغرة؟</li>
+                <li>سؤال تقني أو قانوني عن قطاع اللوجستيك؟</li>
+            </ul>
+            <p style='color:#444;line-height:1.8;'><strong>أيها يصلح كإعلانك الأول.</strong> النشر مجاني تماماً خلال فترة الإطلاق.</p>
+            <div style='text-align:center;margin:26px 0;'>
+                <a href='https://www.nwafizlogi.com/ar/listings/create' style='background:#10b981;color:white;padding:13px 30px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                    + أضف إعلانك الآن
+                </a>
+            </div>";
+        $this->mailer->send($user->email, '🚛 خمس دقائق = إعلانك الأول على نوافذ', $this->wrap($body));
+    }
+
+    /** Day 5 — educational: send the article on selling a truck. */
+    public function onboardingEducational(User $user): void
+    {
+        if (!$this->shouldEmailUser($user)) return;
+        $body = "
+            <h3 style='color:#0a2342;'>📚 دليل: كيف تبيع شاحنتك في السعودية</h3>
+            <p style='color:#444;line-height:1.8;'>
+                نشرنا دليلاً جديداً يستحق وقتك — 7 دقائق قراءة، يغطي:
+            </p>
+            <ul style='color:#444;line-height:1.9;'>
+                <li>كيف تحدّد سعر بيع واقعي</li>
+                <li>المستندات التي تحتاجها قبل الإعلان</li>
+                <li>تصوير احترافي = ضعف الاستفسارات</li>
+                <li>التفاوض — 3 قواعد ذهبية</li>
+            </ul>
+            <div style='text-align:center;margin:24px 0;'>
+                <a href='https://www.nwafizlogi.com/ar/articles/how-to-sell-truck-in-saudi-arabia' style='background:#0a2342;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                    اقرأ الدليل ←
+                </a>
+            </div>
+            <p style='color:#666;font-size:13px;text-align:center;'>
+                لدينا 5 دلائل مماثلة:
+                <a href='https://www.nwafizlogi.com/ar/articles' style='color:#10b981;'>تصفّح المكتبة</a>
+            </p>";
+        $this->mailer->send($user->email, '📚 دليل جديد: بيع شاحنتك في السعودية', $this->wrap($body));
+    }
+
+    /** Day 9 — social proof + scarcity for the free-launch period. */
+    public function onboardingSocialProof(User $user): void
+    {
+        if (!$this->shouldEmailUser($user)) return;
+        $listingCount = \App\Models\Listing::where('status', 'active')->count();
+        $userCount    = User::count();
+        $body = "
+            <h3 style='color:#0a2342;'>📊 {$listingCount} إعلان نشط — هل إعلانك أحدها؟</h3>
+            <p style='color:#444;line-height:1.8;'>
+                على نوافذ الآن <strong>{$listingCount} إعلان نشط</strong> من
+                <strong>{$userCount}+ مستخدم</strong> في 15 مدينة سعودية.
+            </p>
+            <p style='color:#444;line-height:1.8;'>
+                نوافذ مجاناً 100% خلال فترة الإطلاق. لاحقاً سنطلق باقات مدفوعة
+                (Pro: إعلانات unlimited + featured + تحليلات).
+            </p>
+            <p style='color:#0a2342;line-height:1.8;background:#fef3c7;padding:14px;border-radius:8px;'>
+                <strong>🎁 كل من سجّل خلال فترة الإطلاق</strong> يحصل على
+                <strong>Pro مجاناً لـ 6 أشهر</strong> عند إطلاق الباقات.
+            </p>
+            <div style='text-align:center;margin:24px 0;'>
+                <a href='https://www.nwafizlogi.com/dashboard' style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                    افتح لوحتي
+                </a>
+            </div>";
+        $this->mailer->send($user->email, "📊 {$listingCount} إعلان نشط — انضم الآن", $this->wrap($body));
+    }
+
+    /** Day 14 — direct ask for feedback. Highest reply rate. */
+    public function onboardingFeedback(User $user): void
+    {
+        if (!$this->shouldEmailUser($user)) return;
+        $name = htmlspecialchars($user->name_ar ?: $user->name_en ?: 'صديقنا');
+        $body = "
+            <h3 style='color:#0a2342;'>سؤال مباشر — هل نوافذ تخدمك؟</h3>
+            <p style='color:#444;line-height:1.8;'>
+                أهلاً {$name}،<br>
+                مرّ أسبوعان على تسجيلك في نوافذ. وقت كافٍ لتكوين انطباع.
+            </p>
+            <p style='color:#444;line-height:1.8;'><strong>سؤال واحد فقط</strong> — كيف تقيّم تجربتك حتى الآن؟</p>
+            <ul style='color:#444;line-height:1.9;list-style:none;padding-inline-start:0;'>
+                <li>(أ) ممتازة — أستخدمها بانتظام</li>
+                <li>(ب) جيدة — أحتاج تعريف أكثر بالميزات</li>
+                <li>(ج) متوسطة — لم أستفد كما توقّعت</li>
+                <li>(د) سيئة — لم أجد ما أبحث عنه</li>
+            </ul>
+            <p style='color:#444;line-height:1.8;'>
+                ردّ بحرف واحد على هذا الإيميل وأنا أتابع من هناك. كل ردّ صادق يساعدنا
+                نبني منصة أفضل.
+            </p>
+            <p style='color:#888;font-size:12px;margin-top:18px;'>
+                شكراً على وقتك،<br>
+                فريق نوافذ
+            </p>";
+        $this->mailer->send($user->email, 'سؤال واحد فقط — كيف تجربتك مع نوافذ؟', $this->wrap($body));
+    }
+
     public function newUserRegisteredToAdmin(User $newUser): void
     {
         $admins = User::where('role', 'admin')

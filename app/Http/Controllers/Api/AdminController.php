@@ -488,6 +488,14 @@ class AdminController extends Controller
             ]);
         } catch (\Throwable $e) { \Log::warning('push (approve): '.$e->getMessage()); }
 
+        // Broadcast to social channels. Each is a no-op if its credentials
+        // aren't configured — safe to ship before the bots are wired up.
+        try { app(\App\Services\Marketing\TelegramBroadcaster::class)->broadcast($listing); }
+        catch (\Throwable $e) { \Log::warning('telegram broadcast: '.$e->getMessage()); }
+
+        try { app(\App\Services\Marketing\XBroadcaster::class)->broadcast($listing); }
+        catch (\Throwable $e) { \Log::warning('x broadcast: '.$e->getMessage()); }
+
         return response()->json(['message' => 'تم نشر الإعلان بنجاح.', 'data' => $listing]);
     }
 
