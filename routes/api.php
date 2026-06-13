@@ -32,6 +32,10 @@ Route::get('stats', [StatsController::class, 'index']);
 // Public — list available subscription plans (for /pricing page)
 Route::get('plans', [SubscriptionController::class, 'plans']);
 
+// Public — newsletter signup. Lazy-creates the subscribers table; idempotent on
+// duplicate emails; rate-limited to 5 signups per IP per hour.
+Route::post('newsletter/subscribe', [\App\Http\Controllers\Api\NewsletterController::class, 'subscribe']);
+
 // Public listings (read-only)
 Route::get('listings/featured',      [ListingController::class, 'featured']); // before {id}
 Route::get('listings',               [ListingController::class, 'index']);

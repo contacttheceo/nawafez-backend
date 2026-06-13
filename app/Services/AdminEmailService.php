@@ -433,6 +433,54 @@ class AdminEmailService
         $this->mailer->send($user->email, "📊 {$listingCount} إعلان نشط — انضم الآن", $this->wrap($body));
     }
 
+    /** Newsletter signup welcome — no user account required, just an email. */
+    public function newsletterWelcome(string $email, string $locale = 'ar'): void
+    {
+        $isAr = $locale === 'ar';
+        $body = $isAr
+            ? "
+                <h3 style='color:#0a2342;'>أهلاً بك في نشرة نوافذ 📬</h3>
+                <p style='color:#444;line-height:1.8;'>
+                    تم اشتراكك بنجاح. سنرسل لك:
+                </p>
+                <ul style='color:#444;line-height:1.9;'>
+                    <li>أبرز الإعلانات الجديدة كل أسبوع</li>
+                    <li>تحديثات قطاع النقل واللوجستيك في السعودية</li>
+                    <li>دلائل عملية ومحتوى تعليمي</li>
+                </ul>
+                <p style='color:#444;line-height:1.8;'>
+                    لا spam، لا إعلانات خارجية. فقط ما يستحق وقتك.
+                </p>
+                <div style='text-align:center;margin:24px 0;'>
+                    <a href='https://www.nwafizlogi.com/ar/listings'
+                       style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                        تصفّح المنصة الآن
+                    </a>
+                </div>"
+            : "
+                <h3 style='color:#0a2342;'>Welcome to the Nwafiz Newsletter 📬</h3>
+                <p style='color:#444;line-height:1.8;'>
+                    You're subscribed. We'll send you:
+                </p>
+                <ul style='color:#444;line-height:1.9;'>
+                    <li>Top new listings every week</li>
+                    <li>Saudi transport and logistics sector updates</li>
+                    <li>Practical guides and educational content</li>
+                </ul>
+                <p style='color:#444;line-height:1.8;'>
+                    No spam, no third-party ads. Only what's worth your time.
+                </p>
+                <div style='text-align:center;margin:24px 0;'>
+                    <a href='https://www.nwafizlogi.com/en/listings'
+                       style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                        Browse the platform
+                    </a>
+                </div>";
+
+        $subject = $isAr ? 'أهلاً بك في نشرة نوافذ 📬' : 'Welcome to the Nwafiz Newsletter 📬';
+        $this->mailer->send($email, $subject, $this->wrap($body));
+    }
+
     /** Day 14 — direct ask for feedback. Highest reply rate. */
     public function onboardingFeedback(User $user): void
     {
