@@ -263,6 +263,21 @@ class ListingController extends Controller
             \Log::warning('listing email notification failed: '.$e->getMessage());
         }
 
+        // For auto-published listings (fleet/jobs/forum), also fire the same
+        // distribution + indexing pipeline that admin approval triggers.
+        // Without this, auto-approved listings would never reach Telegram/X
+        // or get IndexNow-pinged — only manually approved ma/contracts would.
+        if ($listing->status === 'active') {
+            try { app(\App\Services\Marketing\TelegramBroadcaster::class)->broadcast($listing); }
+            catch (\Throwable $e) { \Log::warning('telegram broadcast (auto): '.$e->getMessage()); }
+
+            try { app(\App\Services\Marketing\XBroadcaster::class)->broadcast($listing); }
+            catch (\Throwable $e) { \Log::warning('x broadcast (auto): '.$e->getMessage()); }
+
+            try { app(\App\Services\Marketing\IndexNow::class)->submitListing($listing->id); }
+            catch (\Throwable $e) { \Log::warning('indexnow (auto): '.$e->getMessage()); }
+        }
+
         return response()->json(['data' => $listing, 'message' => 'تم نشر الإعلان بنجاح.'], 201);
     }
 
