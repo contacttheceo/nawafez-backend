@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Services\Marketing;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * IndexNow client — pings Bing/Yandex/Seznam the moment a new URL is
+ * publishable. Cuts time-to-index from days to minutes.
+ *
+ * Protocol: https://www.indexnow.org/documentation
+ *
+ * The key file at /a2ff536a689be80ca2c01ba54ff84d2d.txt on the frontend
+ * is what proves we own the domain. Hardcoded here because the key is
+ * NOT secret — anyone visiting the URL can see it. It just has to match.
+ *
+ * No-op if the frontend isn't reachable.
+ */
+class IndexNow
+{
+    private const KEY      = 'a2ff536a689be80ca2c01ba54ff84d2d';
+    private const HOST     = 'www.nwafizlogi.com';
+    private const ENDPOINT = 'https://api.indexnow.org/IndexNow';
+
+    /** Submit one or many URLs. Returns true on 2xx. */
+    public function submit(array $urls): bool
+    {
+        if (empty($urls)) return false;
+
+        // IndexNow accepts up to 10,000 URLs per call. We keep it small.
+        $urls = array_slice(array_values(array_unique($urls)), 0, 100);
+
+        try {
+            $res = Http::timeout(6)->post(self::ENDPOINT, [
+                'host'        => self::HOST,
+                'key'         => self::KEY,
+                'keyLocation' => 'https://' . self::HOST . '/' . self::KEY . '.txt',
+                'urlList'     => $urls,
+            ]);
+
+            // 200, 202 = success; 422 = bad URL; 429 = rate limit (ignore).
+            if (in_array($res->status(), [200, 202], true)) return true;
+
+            Log::info('IndexNow non-success', [
+                'status' => $res->status(),
+                'body'   => $res->body(),
+                'count'  => count($urls),
+            ]);
+            return false;
+        } catch (\Throwable $e) {
+            Log::warning('IndexNow exception: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /** Convenience: ping for a freshly approved listing. */
+    public function submitListing(int $listingId): bool
+    {
+        return $this->submit([
+            "https://www.nwafizlogi.com/ar/listings/{$listingId}",
+            "https://www.nwafizlogi.com/en/listings/{$listingId}",
+        ]);
+    }
+}

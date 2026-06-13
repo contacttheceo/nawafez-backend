@@ -496,6 +496,11 @@ class AdminController extends Controller
         try { app(\App\Services\Marketing\XBroadcaster::class)->broadcast($listing); }
         catch (\Throwable $e) { \Log::warning('x broadcast: '.$e->getMessage()); }
 
+        // Ping IndexNow so Bing/Yandex pick up the URL within minutes
+        // instead of waiting for the next crawl cycle.
+        try { app(\App\Services\Marketing\IndexNow::class)->submitListing($listing->id); }
+        catch (\Throwable $e) { \Log::warning('indexnow: '.$e->getMessage()); }
+
         return response()->json(['message' => 'تم نشر الإعلان بنجاح.', 'data' => $listing]);
     }
 
