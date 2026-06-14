@@ -151,6 +151,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('listings/{id}/approve',        [AdminController::class, 'approveListing']);
         Route::patch('listings/{id}/reject',         [AdminController::class, 'rejectListing']);
         Route::patch('listings/{id}/feature',        [AdminController::class, 'toggleFeatured']);
+        Route::patch('listings/{id}/hide',           [AdminController::class, 'hideListing']);
+        Route::patch('listings/{id}/unhide',         [AdminController::class, 'unhideListing']);
+        Route::patch('listings/{id}',                [AdminController::class, 'updateListing']);
+        Route::delete('listings/{id}',               [AdminController::class, 'destroyListing']);
         Route::post('listings/bulk-approve',         [AdminController::class, 'bulkApproveListings']);
         Route::post('listings/bulk-reject',          [AdminController::class, 'bulkRejectListings']);
 

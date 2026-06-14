@@ -284,7 +284,14 @@ class ListingController extends Controller
     // POST /api/listings/{id} — full update (FormData)
     public function update(Request $request, int $id): JsonResponse
     {
-        $listing = Listing::where('user_id', $request->user()->id)->findOrFail($id);
+        // Owners can edit their own listings. Admins can edit any listing
+        // through the same endpoint (so the user-facing edit form works for
+        // both roles without a second client codepath).
+        $query = Listing::query();
+        if (($request->user()->role ?? null) !== 'admin') {
+            $query->where('user_id', $request->user()->id);
+        }
+        $listing = $query->findOrFail($id);
 
         $this->validate($request, [
             'title_ar'       => ['sometimes', 'string', 'max:255'],

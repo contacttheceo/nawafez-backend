@@ -541,6 +541,118 @@ class AdminController extends Controller
         return response()->json(['message' => 'تم رفض الإعلان.']);
     }
 
+    // PATCH /api/admin/listings/{id}/hide
+    // Pulls the listing off the public site without rejecting it. The owner
+    // is *not* notified (silent moderation). Status flips to 'hidden'.
+    public function hideListing(Request $request, int $id): JsonResponse
+    {
+        $listing = Listing::findOrFail($id);
+        $previousStatus = $listing->status;
+        $listing->update(['status' => 'hidden']);
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.hide',
+            'listing',
+            $listing->id,
+            ['previous_status' => $previousStatus, 'title_ar' => $listing->title_ar],
+            $request
+        );
+
+        return response()->json(['message' => 'تم إخفاء الإعلان.', 'data' => $listing]);
+    }
+
+    // PATCH /api/admin/listings/{id}/unhide
+    // Reverses hideListing — brings the listing back to active.
+    public function unhideListing(Request $request, int $id): JsonResponse
+    {
+        $listing = Listing::findOrFail($id);
+        $listing->update(['status' => 'active']);
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.unhide',
+            'listing',
+            $listing->id,
+            ['title_ar' => $listing->title_ar],
+            $request
+        );
+
+        return response()->json(['message' => 'تم إعادة عرض الإعلان.', 'data' => $listing]);
+    }
+
+    // PATCH /api/admin/listings/{id}
+    // Admin-side edit. Bypasses the owner-only guard in
+    // ListingController::update and accepts the same fillable fields.
+    // Media uploads still go through the user-side endpoint — this is
+    // for text corrections (title/description/price/city) and status
+    // overrides.
+    public function updateListing(Request $request, int $id): JsonResponse
+    {
+        $this->validate($request, [
+            'title_ar'       => ['sometimes', 'string', 'max:255'],
+            'title_en'       => ['sometimes', 'nullable', 'string', 'max:255'],
+            'description_ar' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'description_en' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'city'           => ['sometimes', 'nullable', 'string', 'max:80'],
+            'region'         => ['sometimes', 'nullable', 'string', 'max:80'],
+            'price'          => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'currency'       => ['sometimes', 'nullable', 'string', 'size:3'],
+            'price_type'     => ['sometimes', 'nullable', 'string', 'max:32'],
+            'section'        => ['sometimes', 'string', 'in:fleet,contracts,ma,jobs,forum'],
+            'listing_type'   => ['sometimes', 'nullable', 'string', 'max:32'],
+            'forum_category' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'status'         => ['sometimes', 'string', 'in:pending_review,active,rejected,hidden,expired,draft'],
+            'expires_at'     => ['sometimes', 'nullable', 'date'],
+            'is_featured'             => ['sometimes', 'boolean'],
+            'is_financing_eligible'   => ['sometimes', 'boolean'],
+            'is_ready_to_operate'     => ['sometimes', 'boolean'],
+        ]);
+
+        $listing = Listing::findOrFail($id);
+        $before  = $listing->only(['title_ar', 'price', 'status', 'city']);
+        $listing->update($request->only([
+            'title_ar', 'title_en', 'description_ar', 'description_en',
+            'city', 'region', 'price', 'currency', 'price_type',
+            'section', 'listing_type', 'forum_category',
+            'status', 'expires_at',
+            'is_featured', 'is_financing_eligible', 'is_ready_to_operate',
+        ]));
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.update',
+            'listing',
+            $listing->id,
+            ['before' => $before, 'after' => $listing->only(array_keys($before))],
+            $request
+        );
+
+        return response()->json(['message' => 'تم تحديث الإعلان.', 'data' => $listing->fresh()]);
+    }
+
+    // DELETE /api/admin/listings/{id}
+    // Soft delete (the Listing model uses the SoftDeletes trait). The row
+    // stays in the DB with deleted_at set; can be restored later if needed.
+    public function destroyListing(Request $request, int $id): JsonResponse
+    {
+        $listing = Listing::findOrFail($id);
+        $snapshot = $listing->only(['title_ar', 'section', 'status', 'user_id']);
+
+        $listing->delete();
+
+        AuditLogger::log(
+            $request->user(),
+            'listing.delete',
+            'listing',
+            $id,
+            $snapshot,
+            $request
+        );
+
+        return response()->json(['message' => 'تم حذف الإعلان.']);
+    }
+
     // PATCH /api/admin/listings/{id}/feature
     public function toggleFeatured(Request $request, int $id): JsonResponse
     {
