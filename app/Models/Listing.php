@@ -17,7 +17,19 @@ class Listing extends Model
         'status', 'rejection_reason',
         'dynamic_data', 'media',
         'is_featured', 'is_financing_eligible', 'is_ready_to_operate',
+        // Contact-visibility opt-in (only 'fleet' and 'jobs' can opt-in;
+        // enforced by ContactRevealController). contact_phone and
+        // contact_email are optional per-listing overrides; if empty, the
+        // reveal endpoint falls back to the user's profile.
+        'is_contact_visible', 'contact_phone', 'contact_email',
         'expires_at',
+    ];
+
+    // Never leak raw phone/email in public listing responses. Reveal happens
+    // through the dedicated auth-gated endpoint only.
+    protected $hidden = [
+        'contact_phone',
+        'contact_email',
     ];
 
     protected function casts(): array
@@ -28,6 +40,7 @@ class Listing extends Model
             'is_featured'            => 'boolean',
             'is_financing_eligible'  => 'boolean',
             'is_ready_to_operate'    => 'boolean',
+            'is_contact_visible'     => 'boolean',
             'expires_at'             => 'datetime',
             'price'                  => 'integer',
         ];

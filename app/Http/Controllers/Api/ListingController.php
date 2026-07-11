@@ -123,13 +123,21 @@ class ListingController extends Controller
         // pending_review and expired stay viewable so the owner sees status banners
         // and direct links from emails keep working.
         $hidden = ['rejected', 'draft'];
+        $viewer = $request->user();
+        $isOwner = $viewer && $viewer->id === $listing->user_id;
+        $isAdmin = $viewer && $viewer->role === 'admin';
         if (in_array($listing->status, $hidden, true)) {
-            $viewer = $request->user();
-            $isOwner = $viewer && $viewer->id === $listing->user_id;
-            $isAdmin = $viewer && $viewer->role === 'admin';
             if (!$isOwner && !$isAdmin) {
                 return response()->json(['message' => 'الإعلان غير متاح.'], 404);
             }
+        }
+
+        // The owner (or an admin) needs to see their own contact_phone/email so
+        // the edit form can prefill and the dashboard shows what will be revealed.
+        // Public viewers only see is_contact_visible (a boolean flag) — reveal
+        // still requires the auth-gated /reveal-contact endpoint.
+        if ($isOwner || $isAdmin) {
+            $listing->makeVisible(['contact_phone', 'contact_email']);
         }
 
         return response()->json(['data' => $listing]);
@@ -163,6 +171,11 @@ class ListingController extends Controller
             'price'          => ['nullable', 'integer', 'min:0'],
             'dynamic_data'   => ['nullable', 'json'],
             'images.*'       => ['nullable', 'image', 'max:5120'],
+            // Contact-visibility opt-in fields (only honored for fleet/jobs
+            // — enforced below when we build the create payload).
+            'is_contact_visible' => ['nullable', 'boolean'],
+            'contact_phone'      => ['nullable', 'string', 'max:20'],
+            'contact_email'      => ['nullable', 'email', 'max:255'],
         ]);
 
         $user = $request->user();
@@ -217,6 +230,14 @@ class ListingController extends Controller
 
         $dynamicData = $request->dynamic_data ? json_decode($request->dynamic_data, true) : [];
 
+        // Enforce section restrictions on contact visibility:
+        //   - fleet + jobs: owner may opt-in to expose contact
+        //   - contracts + ma: always internal-messaging (Blind Bidding + M&A
+        //     confidentiality are the platform's core moats)
+        //   - forum: no commercial contact concept
+        $optInAllowed = in_array($section, ['fleet', 'jobs'], true);
+        $isContactVisible = $optInAllowed && (bool) $request->boolean('is_contact_visible');
+
         $listing = Listing::create([
             'user_id'        => $user->id,
             'section'        => $section,
@@ -230,7 +251,9 @@ class ListingController extends Controller
             'region'         => $request->region,
             'price'          => $request->price,
             'price_type'     => $request->price_type ?? 'fixed',
-            'contact_phone'  => $request->contact_phone,
+            'is_contact_visible' => $isContactVisible,
+            'contact_phone'  => $optInAllowed ? $request->contact_phone : null,
+            'contact_email'  => $optInAllowed ? $request->contact_email : null,
             'status'         => $status,
             'dynamic_data'   => $dynamicData,
             'media'          => $media,
@@ -303,6 +326,8 @@ class ListingController extends Controller
             'price'          => ['sometimes', 'nullable', 'integer', 'min:0'],
             'price_type'     => ['sometimes', 'nullable', 'string', 'in:fixed,negotiable,on_request'],
             'contact_phone'  => ['sometimes', 'nullable', 'string', 'max:20'],
+            'contact_email'  => ['sometimes', 'nullable', 'email', 'max:255'],
+            'is_contact_visible' => ['sometimes', 'boolean'],
             'listing_type'   => ['sometimes', 'nullable', 'string', 'max:60'],
             'section'        => ['sometimes', 'in:ma,fleet,contracts,jobs,forum'],
             'forum_category' => ['sometimes', 'nullable', 'in:legal,financial,operational,logistics'],
@@ -313,9 +338,20 @@ class ListingController extends Controller
 
         $data = $request->only([
             'title_ar', 'title_en', 'description_ar', 'description_en',
-            'city', 'region', 'price', 'price_type', 'contact_phone', 'listing_type',
-            'forum_category',
+            'city', 'region', 'price', 'price_type',
+            'contact_phone', 'contact_email', 'is_contact_visible',
+            'listing_type', 'forum_category',
         ]);
+
+        // Re-enforce the section restriction on contact visibility. A user
+        // can't flip is_contact_visible=true on a contracts or ma listing
+        // (or a forum thread) via update.
+        $sectionForVis = $request->section ?? $listing->section;
+        if (!in_array($sectionForVis, ['fleet', 'jobs'], true)) {
+            $data['is_contact_visible'] = false;
+            $data['contact_phone']      = null;
+            $data['contact_email']      = null;
+        }
 
         // Section change → back to pending_review
         if ($request->filled('section') && $request->section !== $listing->section) {

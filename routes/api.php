@@ -36,6 +36,11 @@ Route::get('plans', [SubscriptionController::class, 'plans']);
 // duplicate emails; rate-limited to 5 signups per IP per hour.
 Route::post('newsletter/subscribe', [\App\Http\Controllers\Api\NewsletterController::class, 'subscribe']);
 
+// Public — WhatsApp click-through. Redirects to wa.me/… server-side so the
+// phone never appears in HTML that scrapers can harvest. Only works for
+// listings whose owner opted-in AND is in fleet/jobs section.
+Route::get('listings/{id}/wa-redirect', [\App\Http\Controllers\Api\ContactRevealController::class, 'whatsappRedirect']);
+
 // Public listings (read-only)
 Route::get('listings/featured',      [ListingController::class, 'featured']); // before {id}
 Route::get('listings',               [ListingController::class, 'index']);
@@ -53,6 +58,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout',              [AuthController::class, 'logout']);
     Route::get('auth/me',                   [AuthController::class, 'me']);
     Route::post('auth/resend-verification', [AuthController::class, 'resendVerification']);
+
+    // Contact reveal — auth-gated to block scrapers. Rate limited 5/day/user.
+    // Rejects sections other than fleet/jobs and listings without opt-in.
+    Route::post('listings/{id}/reveal-contact', [\App\Http\Controllers\Api\ContactRevealController::class, 'reveal']);
 
     // ─── Verified-only routes: publishing actions require verified email ───
     Route::middleware('verified')->group(function () {
