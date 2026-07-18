@@ -48,12 +48,12 @@ class AdminEmailService
             $user->email,
             "تم نشر إعلانك على نوافذ ✓",
             $this->wrap("
-                <h3 style='color:#0a2342;'>مرحباً {$user->name_ar},</h3>
+                <h3 style='color:#526483;'>مرحباً {$user->name_ar},</h3>
                 <p style='color:#444;line-height:1.6;'>
                     تمت الموافقة على إعلانك <strong>«{$title}»</strong> وهو الآن منشور على منصة نوافذ.
                 </p>
                 <div style='text-align:center;margin:24px 0;'>
-                    <a href='{$listingUrl}' style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                    <a href='{$listingUrl}' style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                         عرض الإعلان
                     </a>
                 </div>
@@ -76,7 +76,7 @@ class AdminEmailService
             $user->email,
             "تعذّر نشر إعلانك على نوافذ",
             $this->wrap("
-                <h3 style='color:#0a2342;'>مرحباً {$user->name_ar},</h3>
+                <h3 style='color:#526483;'>مرحباً {$user->name_ar},</h3>
                 <p style='color:#444;line-height:1.6;'>
                     للأسف، لم يتمكّن فريق نوافذ من نشر إعلانك <strong>«{$title}»</strong>.
                 </p>
@@ -87,7 +87,7 @@ class AdminEmailService
                 </div>
                 <p style='color:#444;line-height:1.6;'>يمكنك تعديل الإعلان وإعادة نشره:</p>
                 <div style='text-align:center;margin:24px 0;'>
-                    <a href='{$editUrl}' style='background:#0a2342;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                    <a href='{$editUrl}' style='background:#526483;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                         تعديل الإعلان
                     </a>
                 </div>
@@ -104,7 +104,7 @@ class AdminEmailService
             $user->email,
             "تم توثيق حسابك التجاري على نوافذ ✓",
             $this->wrap("
-                <h3 style='color:#0a2342;'>مرحباً {$user->name_ar},</h3>
+                <h3 style='color:#526483;'>مرحباً {$user->name_ar},</h3>
                 <p style='color:#444;line-height:1.6;'>
                     تهانينا — تم قبول طلب توثيق حسابك التجاري على منصة نوافذ. أصبحت الآن مؤسسة موثّقة ✓
                 </p>
@@ -115,7 +115,7 @@ class AdminEmailService
                     <li>أولوية في الظهور بنتائج البحث</li>
                 </ul>
                 <div style='text-align:center;margin:24px 0;'>
-                    <a href='{$frontendUrl}/ar/dashboard' style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                    <a href='{$frontendUrl}/ar/dashboard' style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                         الذهاب للوحة التحكم
                     </a>
                 </div>
@@ -134,7 +134,7 @@ class AdminEmailService
             $user->email,
             "تعذّر توثيق حسابك التجاري — نوافذ",
             $this->wrap("
-                <h3 style='color:#0a2342;'>مرحباً {$user->name_ar},</h3>
+                <h3 style='color:#526483;'>مرحباً {$user->name_ar},</h3>
                 <p style='color:#444;line-height:1.6;'>
                     للأسف، لم يتمكّن فريق نوافذ من قبول طلب توثيق حسابك التجاري.
                 </p>
@@ -145,7 +145,7 @@ class AdminEmailService
                 </div>
                 <p style='color:#444;line-height:1.6;'>يمكنك إعادة رفع الوثيقة بعد المعالجة:</p>
                 <div style='text-align:center;margin:24px 0;'>
-                    <a href='{$profileUrl}' style='background:#0a2342;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                    <a href='{$profileUrl}' style='background:#526483;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                         إعادة رفع الوثيقة
                     </a>
                 </div>
@@ -162,7 +162,7 @@ class AdminEmailService
             $user->email,
             "تم تعليق حسابك على نوافذ",
             $this->wrap("
-                <h3 style='color:#0a2342;'>مرحباً {$user->name_ar},</h3>
+                <h3 style='color:#526483;'>مرحباً {$user->name_ar},</h3>
                 <p style='color:#444;line-height:1.6;'>
                     تم تعليق حسابك على منصة نوافذ مؤقتاً.
                 </p>
@@ -173,7 +173,7 @@ class AdminEmailService
                 </div>
                 <p style='color:#444;line-height:1.6;'>
                     للاستفسار أو الاعتراض، تواصل معنا على
-                    <a href='mailto:info@nwafizlogi.com' style='color:#0a2342;'>info@nwafizlogi.com</a>.
+                    <a href='mailto:info@nwafizlogi.com' style='color:#526483;'>info@nwafizlogi.com</a>.
                 </p>
             ")
         );
@@ -202,7 +202,7 @@ class AdminEmailService
             <!-- Big welcome -->
             <div style='text-align:center;margin-bottom:24px;'>
                 <div style='font-size:48px;line-height:1;margin-bottom:8px;'>🎉</div>
-                <h2 style='color:#0a2342;font-size:24px;margin:0 0 8px;'>تم تفعيل حسابك يا {$name}!</h2>
+                <h2 style='color:#526483;font-size:24px;margin:0 0 8px;'>تم تفعيل حسابك يا {$name}!</h2>
                 <p style='color:#666;font-size:14px;margin:0;line-height:1.6;'>
                     أهلاً بك في عائلة <strong>نوافذ</strong> — منصة اللوجستيك B2B الأولى في السعودية.
                 </p>
@@ -210,19 +210,19 @@ class AdminEmailService
 
             <!-- Primary CTA -->
             <div style='text-align:center;margin:28px 0;'>
-                <a href='{$postUrl}' style='background:#10b981;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;box-shadow:0 4px 12px rgba(16,185,129,0.25);'>
+                <a href='{$postUrl}' style='background:#0D9B6C;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;box-shadow:0 4px 12px rgba(16,185,129,0.25);'>
                     🚀 أنشر إعلانك الأول
                 </a>
             </div>
 
             <p style='color:#666;font-size:13px;text-align:center;margin:-12px 0 20px;'>
-                أو <a href='{$browseUrl}' style='color:#10b981;text-decoration:none;font-weight:bold;'>تصفّح الإعلانات الموجودة</a>
+                أو <a href='{$browseUrl}' style='color:#0D9B6C;text-decoration:none;font-weight:bold;'>تصفّح الإعلانات الموجودة</a>
             </p>
 
             <hr style='border:none;border-top:1px solid #eee;margin:24px 0;'>
 
             <!-- Features showcase -->
-            <h3 style='color:#0a2342;font-size:18px;margin-bottom:16px;'>✨ كل هذا متاح لك مجاناً الآن:</h3>
+            <h3 style='color:#526483;font-size:18px;margin-bottom:16px;'>✨ كل هذا متاح لك مجاناً الآن:</h3>
 
             <table style='width:100%;border-collapse:collapse;margin-bottom:16px;'>
                 <tr>
@@ -230,7 +230,7 @@ class AdminEmailService
                         <div style='font-size:22px;'>🚛</div>
                     </td>
                     <td style='padding:12px 8px;'>
-                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>تصفّح آلاف الفرص اللوجستية</p>
+                        <p style='margin:0 0 4px;color:#526483;font-weight:bold;font-size:14px;'>تصفّح آلاف الفرص اللوجستية</p>
                         <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
                             أساطيل، عقود تشغيلية، بيع كيانات (M&A)، وظائف، ومنتدى استشارات — كله في مكان واحد.
                         </p>
@@ -239,7 +239,7 @@ class AdminEmailService
                 <tr>
                     <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>📢</div></td>
                     <td style='padding:12px 8px;'>
-                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>انشر إعلاناتك مجاناً</p>
+                        <p style='margin:0 0 4px;color:#526483;font-weight:bold;font-size:14px;'>انشر إعلاناتك مجاناً</p>
                         <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
                             صور، تفاصيل، سعر، فلاتر ذكية — يصل لمشترين جدّيين في السعودية.
                         </p>
@@ -248,7 +248,7 @@ class AdminEmailService
                 <tr>
                     <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>💬</div></td>
                     <td style='padding:12px 8px;'>
-                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>تواصل مباشر بدون كشف رقمك</p>
+                        <p style='margin:0 0 4px;color:#526483;font-weight:bold;font-size:14px;'>تواصل مباشر بدون كشف رقمك</p>
                         <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
                             رسائل داخلية آمنة، أو تواصل بالواتساب عند الجدّية فقط.
                         </p>
@@ -257,7 +257,7 @@ class AdminEmailService
                 <tr>
                     <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>🤖</div></td>
                     <td style='padding:12px 8px;'>
-                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>ذكاء اصطناعي يساعدك</p>
+                        <p style='margin:0 0 4px;color:#526483;font-weight:bold;font-size:14px;'>ذكاء اصطناعي يساعدك</p>
                         <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
                             AI يكتب إعلانك من وصف بسيط، ويحلّل العقود قبل التوقيع.
                         </p>
@@ -266,7 +266,7 @@ class AdminEmailService
                 <tr>
                     <td style='padding:12px 8px;vertical-align:top;'><div style='font-size:22px;'>✓</div></td>
                     <td style='padding:12px 8px;'>
-                        <p style='margin:0 0 4px;color:#0a2342;font-weight:bold;font-size:14px;'>وثّق نشاطك التجاري</p>
+                        <p style='margin:0 0 4px;color:#526483;font-weight:bold;font-size:14px;'>وثّق نشاطك التجاري</p>
                         <p style='margin:0;color:#666;font-size:13px;line-height:1.6;'>
                             ارفع سجلك التجاري واحصل على شارة <strong>'موثّق'</strong> — تزيد ثقة المشترين × 3.
                         </p>
@@ -275,7 +275,7 @@ class AdminEmailService
             </table>
 
             <!-- Referral program (the big motivator) -->
-            <div style='background:linear-gradient(135deg,#10b981 0%,#0d9b6c 100%);border-radius:12px;padding:24px;margin:24px 0;color:white;'>
+            <div style='background:linear-gradient(135deg,#0D9B6C 0%,#0d9b6c 100%);border-radius:12px;padding:24px;margin:24px 0;color:white;'>
                 <h3 style='margin:0 0 10px;font-size:18px;'>🌱 ادعُ زملاءك واكسب مكافآت</h3>
                 <p style='margin:0 0 14px;font-size:13px;line-height:1.7;opacity:0.95;'>
                     شارك رابطك الخاص — كل صديق ينضم، تكسب:
@@ -302,17 +302,17 @@ class AdminEmailService
 
             <!-- Secondary CTAs -->
             <div style='text-align:center;margin:24px 0 16px;'>
-                <a href='{$postUrl}' style='background:#0a2342;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;margin:4px;'>
+                <a href='{$postUrl}' style='background:#526483;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;margin:4px;'>
                     📢 أنشر إعلاناً
                 </a>
-                <a href='{$browseUrl}' style='background:white;color:#0a2342;border:1px solid #e5e7eb;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;margin:4px;'>
+                <a href='{$browseUrl}' style='background:white;color:#526483;border:1px solid #e5e7eb;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;margin:4px;'>
                     🔍 تصفّح السوق
                 </a>
             </div>
 
             <p style='color:#888;font-size:12px;text-align:center;margin-top:24px;line-height:1.7;'>
                 لو احتجت أي مساعدة، نحن هنا:<br>
-                <a href='mailto:support@nwafizlogi.com' style='color:#10b981;text-decoration:none;font-weight:bold;'>support@nwafizlogi.com</a>
+                <a href='mailto:support@nwafizlogi.com' style='color:#0D9B6C;text-decoration:none;font-weight:bold;'>support@nwafizlogi.com</a>
             </p>
         ";
 
@@ -325,7 +325,7 @@ class AdminEmailService
         if (!$user->email) return;
         $name = $user->name_ar ?: $user->name_en ?: 'مستخدم نوافذ';
         $body = "
-            <h3 style='color:#0a2342;'>أهلاً وسهلاً {$name} 🎉</h3>
+            <h3 style='color:#526483;'>أهلاً وسهلاً {$name} 🎉</h3>
             <p style='color:#444;line-height:1.7;'>
                 مرحباً بك في <strong>نوافذ</strong> — منصة اللوجستيك B2B الأولى في السعودية.
             </p>
@@ -338,12 +338,12 @@ class AdminEmailService
                 <li>التواصل المباشر مع البائعين والمشترين</li>
             </ul>
             <div style='text-align:center;margin:24px 0;'>
-                <a href='https://www.nwafizlogi.com/ar/listings' style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                <a href='https://www.nwafizlogi.com/ar/listings' style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                     ابدأ التصفّح
                 </a>
             </div>
             <p style='color:#888;font-size:12px;margin-top:24px;'>
-                هل لديك سؤال؟ راسلنا على <a href='mailto:support@nwafizlogi.com' style='color:#10b981;'>support@nwafizlogi.com</a>
+                هل لديك سؤال؟ راسلنا على <a href='mailto:support@nwafizlogi.com' style='color:#0D9B6C;'>support@nwafizlogi.com</a>
             </p>";
         $this->mailer->send($user->email, 'أهلاً بك في نوافذ 🎉', $this->wrap($body));
     }
@@ -357,7 +357,7 @@ class AdminEmailService
         if (!$this->shouldEmailUser($user)) return;
         $name = htmlspecialchars($user->name_ar ?: $user->name_en ?: 'مستخدم نوافذ');
         $body = "
-            <h3 style='color:#0a2342;'>🚛 خمس دقائق = إعلانك الأول على نوافذ</h3>
+            <h3 style='color:#526483;'>🚛 خمس دقائق = إعلانك الأول على نوافذ</h3>
             <p style='color:#444;line-height:1.8;'>
                 أهلاً {$name}،<br>
                 لاحظنا أنك لم تنشر إعلانك الأول بعد. ربما أنت تستكشف، وهذا طبيعي تماماً.
@@ -371,7 +371,7 @@ class AdminEmailService
             </ul>
             <p style='color:#444;line-height:1.8;'><strong>أيها يصلح كإعلانك الأول.</strong> النشر مجاني تماماً خلال فترة الإطلاق.</p>
             <div style='text-align:center;margin:26px 0;'>
-                <a href='https://www.nwafizlogi.com/ar/listings/create' style='background:#10b981;color:white;padding:13px 30px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                <a href='https://www.nwafizlogi.com/ar/listings/create' style='background:#0D9B6C;color:white;padding:13px 30px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                     + أضف إعلانك الآن
                 </a>
             </div>";
@@ -383,7 +383,7 @@ class AdminEmailService
     {
         if (!$this->shouldEmailUser($user)) return;
         $body = "
-            <h3 style='color:#0a2342;'>📚 دليل: كيف تبيع شاحنتك في السعودية</h3>
+            <h3 style='color:#526483;'>📚 دليل: كيف تبيع شاحنتك في السعودية</h3>
             <p style='color:#444;line-height:1.8;'>
                 نشرنا دليلاً جديداً يستحق وقتك — 7 دقائق قراءة، يغطي:
             </p>
@@ -394,13 +394,13 @@ class AdminEmailService
                 <li>التفاوض — 3 قواعد ذهبية</li>
             </ul>
             <div style='text-align:center;margin:24px 0;'>
-                <a href='https://www.nwafizlogi.com/ar/articles/how-to-sell-truck-in-saudi-arabia' style='background:#0a2342;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                <a href='https://www.nwafizlogi.com/ar/articles/how-to-sell-truck-in-saudi-arabia' style='background:#526483;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                     اقرأ الدليل ←
                 </a>
             </div>
             <p style='color:#666;font-size:13px;text-align:center;'>
                 لدينا 5 دلائل مماثلة:
-                <a href='https://www.nwafizlogi.com/ar/articles' style='color:#10b981;'>تصفّح المكتبة</a>
+                <a href='https://www.nwafizlogi.com/ar/articles' style='color:#0D9B6C;'>تصفّح المكتبة</a>
             </p>";
         $this->mailer->send($user->email, '📚 دليل جديد: بيع شاحنتك في السعودية', $this->wrap($body));
     }
@@ -412,7 +412,7 @@ class AdminEmailService
         $listingCount = \App\Models\Listing::where('status', 'active')->count();
         $userCount    = User::count();
         $body = "
-            <h3 style='color:#0a2342;'>📊 {$listingCount} إعلان نشط — هل إعلانك أحدها؟</h3>
+            <h3 style='color:#526483;'>📊 {$listingCount} إعلان نشط — هل إعلانك أحدها؟</h3>
             <p style='color:#444;line-height:1.8;'>
                 على نوافذ الآن <strong>{$listingCount} إعلان نشط</strong> من
                 <strong>{$userCount}+ مستخدم</strong> في 15 مدينة سعودية.
@@ -421,12 +421,12 @@ class AdminEmailService
                 نوافذ مجاناً 100% خلال فترة الإطلاق. لاحقاً سنطلق باقات مدفوعة
                 (Pro: إعلانات unlimited + featured + تحليلات).
             </p>
-            <p style='color:#0a2342;line-height:1.8;background:#fef3c7;padding:14px;border-radius:8px;'>
+            <p style='color:#526483;line-height:1.8;background:#fef3c7;padding:14px;border-radius:8px;'>
                 <strong>🎁 كل من سجّل خلال فترة الإطلاق</strong> يحصل على
                 <strong>Pro مجاناً لـ 6 أشهر</strong> عند إطلاق الباقات.
             </p>
             <div style='text-align:center;margin:24px 0;'>
-                <a href='https://www.nwafizlogi.com/dashboard' style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                <a href='https://www.nwafizlogi.com/dashboard' style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                     افتح لوحتي
                 </a>
             </div>";
@@ -439,7 +439,7 @@ class AdminEmailService
         $isAr = $locale === 'ar';
         $body = $isAr
             ? "
-                <h3 style='color:#0a2342;'>أهلاً بك في نشرة نوافذ 📬</h3>
+                <h3 style='color:#526483;'>أهلاً بك في نشرة نوافذ 📬</h3>
                 <p style='color:#444;line-height:1.8;'>
                     تم اشتراكك بنجاح. سنرسل لك:
                 </p>
@@ -453,12 +453,12 @@ class AdminEmailService
                 </p>
                 <div style='text-align:center;margin:24px 0;'>
                     <a href='https://www.nwafizlogi.com/ar/listings'
-                       style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                       style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                         تصفّح المنصة الآن
                     </a>
                 </div>"
             : "
-                <h3 style='color:#0a2342;'>Welcome to the Nwafiz Newsletter 📬</h3>
+                <h3 style='color:#526483;'>Welcome to the Nwafiz Newsletter 📬</h3>
                 <p style='color:#444;line-height:1.8;'>
                     You're subscribed. We'll send you:
                 </p>
@@ -472,7 +472,7 @@ class AdminEmailService
                 </p>
                 <div style='text-align:center;margin:24px 0;'>
                     <a href='https://www.nwafizlogi.com/en/listings'
-                       style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                       style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                         Browse the platform
                     </a>
                 </div>";
@@ -487,7 +487,7 @@ class AdminEmailService
         if (!$this->shouldEmailUser($user)) return;
         $name = htmlspecialchars($user->name_ar ?: $user->name_en ?: 'صديقنا');
         $body = "
-            <h3 style='color:#0a2342;'>سؤال مباشر — هل نوافذ تخدمك؟</h3>
+            <h3 style='color:#526483;'>سؤال مباشر — هل نوافذ تخدمك؟</h3>
             <p style='color:#444;line-height:1.8;'>
                 أهلاً {$name}،<br>
                 مرّ أسبوعان على تسجيلك في نوافذ. وقت كافٍ لتكوين انطباع.
@@ -522,7 +522,7 @@ class AdminEmailService
         $role  = htmlspecialchars($newUser->role);
 
         $body = "
-            <h3 style='color:#0a2342;'>🆕 مستخدم جديد سجّل في نوافذ</h3>
+            <h3 style='color:#526483;'>🆕 مستخدم جديد سجّل في نوافذ</h3>
             <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
                 <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666;'>الاسم</td><td style='padding:8px;border-bottom:1px solid #eee;font-weight:bold;'>{$name}</td></tr>
                 <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666;'>الإيميل</td><td style='padding:8px;border-bottom:1px solid #eee;'>{$email}</td></tr>
@@ -530,7 +530,7 @@ class AdminEmailService
                 <tr><td style='padding:8px;color:#666;'>النوع</td><td style='padding:8px;'>{$role}</td></tr>
             </table>
             <div style='text-align:center;margin:24px 0;'>
-                <a href='https://www.nwafizlogi.com/ar/admin' style='background:#0a2342;color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;'>
+                <a href='https://www.nwafizlogi.com/ar/admin' style='background:#526483;color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;'>
                     افتح لوحة الإدارة
                 </a>
             </div>";
@@ -550,12 +550,12 @@ class AdminEmailService
         $url   = "https://www.nwafizlogi.com/ar/listings/{$listing->id}";
 
         $body = "
-            <h3 style='color:#0a2342;'>تم نشر إعلانك ✓</h3>
+            <h3 style='color:#526483;'>تم نشر إعلانك ✓</h3>
             <p style='color:#444;line-height:1.7;'>
                 إعلانك <strong>«{$title}»</strong> مباشر الآن على نوافذ ويمكن للمشترين اكتشافه.
             </p>
             <div style='text-align:center;margin:24px 0;'>
-                <a href='{$url}' style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                <a href='{$url}' style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                     عرض إعلانك
                 </a>
             </div>
@@ -578,14 +578,14 @@ class AdminEmailService
         $url     = "https://www.nwafizlogi.com/ar/admin";
 
         $body = "
-            <h3 style='color:#0a2342;'>📋 إعلان جديد في انتظار المراجعة</h3>
+            <h3 style='color:#526483;'>📋 إعلان جديد في انتظار المراجعة</h3>
             <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
                 <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666;'>العنوان</td><td style='padding:8px;border-bottom:1px solid #eee;font-weight:bold;'>{$title}</td></tr>
                 <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666;'>القسم</td><td style='padding:8px;border-bottom:1px solid #eee;'>{$section}</td></tr>
                 <tr><td style='padding:8px;color:#666;'>المُعلِن</td><td style='padding:8px;'>{$ownerName}</td></tr>
             </table>
             <div style='text-align:center;margin:24px 0;'>
-                <a href='{$url}' style='background:#0a2342;color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;'>
+                <a href='{$url}' style='background:#526483;color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;'>
                     مراجعة الإعلان
                 </a>
             </div>";
@@ -607,15 +607,15 @@ class AdminEmailService
         $url     = "https://www.nwafizlogi.com/ar/listings/{$listing->id}#comment-{$comment->id}";
 
         $body = "
-            <h3 style='color:#0a2342;'>💬 تعليق جديد على إعلانك</h3>
+            <h3 style='color:#526483;'>💬 تعليق جديد على إعلانك</h3>
             <p style='color:#666;font-size:13px;'>
                 <strong>{$author}</strong> علّق على إعلانك <strong>«{$title}»</strong>:
             </p>
-            <blockquote style='background:white;border-inline-start:4px solid #10b981;padding:14px 16px;margin:16px 0;border-radius:6px;color:#444;line-height:1.7;'>
+            <blockquote style='background:white;border-inline-start:4px solid #0D9B6C;padding:14px 16px;margin:16px 0;border-radius:6px;color:#444;line-height:1.7;'>
                 {$body_text}
             </blockquote>
             <div style='text-align:center;margin:24px 0;'>
-                <a href='{$url}' style='background:#10b981;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
+                <a href='{$url}' style='background:#0D9B6C;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;'>
                     عرض ورد
                 </a>
             </div>";
@@ -661,7 +661,7 @@ class AdminEmailService
             $label = htmlspecialchars($sectionLabels[$sec] ?? $sec);
             $sectionRows .= "<tr>
                 <td style='padding:6px 8px;color:#555;'>{$label}</td>
-                <td style='padding:6px 8px;text-align:start;font-weight:bold;color:#0a2342;'>{$count}</td>
+                <td style='padding:6px 8px;text-align:start;font-weight:bold;color:#526483;'>{$count}</td>
             </tr>";
         }
         if ($sectionRows === '') {
@@ -675,8 +675,8 @@ class AdminEmailService
             $views = (int) ($l->views_count ?? 0);
             $url   = "https://www.nwafizlogi.com/ar/listings/{$l->id}";
             $topRows .= "<tr>
-                <td style='padding:6px 8px;'><a href='{$url}' style='color:#0a2342;text-decoration:none;'>{$title}</a></td>
-                <td style='padding:6px 8px;text-align:start;color:#10b981;font-weight:bold;'>{$views} 👁</td>
+                <td style='padding:6px 8px;'><a href='{$url}' style='color:#526483;text-decoration:none;'>{$title}</a></td>
+                <td style='padding:6px 8px;text-align:start;color:#0D9B6C;font-weight:bold;'>{$views} 👁</td>
             </tr>";
         }
         if ($topRows === '') {
@@ -684,17 +684,17 @@ class AdminEmailService
         }
 
         $body = "
-            <h2 style='color:#0a2342;margin:0 0 4px;'>📊 ملخص نشاط نوافذ</h2>
+            <h2 style='color:#526483;margin:0 0 4px;'>📊 ملخص نشاط نوافذ</h2>
             <p style='color:#888;font-size:13px;margin:0 0 24px;'>{$date}</p>
 
             <!-- KPI cards -->
             <table style='width:100%;border-collapse:separate;border-spacing:8px 0;margin-bottom:20px;'>
                 <tr>
-                    <td style='background:#10b981;color:white;padding:16px;border-radius:10px;text-align:center;width:33%;'>
+                    <td style='background:#0D9B6C;color:white;padding:16px;border-radius:10px;text-align:center;width:33%;'>
                         <div style='font-size:11px;opacity:0.85;'>مستخدمون جدد</div>
                         <div style='font-size:26px;font-weight:bold;line-height:1.1;margin-top:6px;'>{$newUsers}</div>
                     </td>
-                    <td style='background:#0a2342;color:white;padding:16px;border-radius:10px;text-align:center;width:33%;'>
+                    <td style='background:#526483;color:white;padding:16px;border-radius:10px;text-align:center;width:33%;'>
                         <div style='font-size:11px;opacity:0.85;'>إعلانات جديدة</div>
                         <div style='font-size:26px;font-weight:bold;line-height:1.1;margin-top:6px;'>{$newListings}</div>
                     </td>
@@ -710,34 +710,34 @@ class AdminEmailService
                 <table style='width:100%;font-size:13px;'>
                     <tr>
                         <td style='color:#666;'>إجمالي المستخدمين</td>
-                        <td style='text-align:start;font-weight:bold;color:#0a2342;'>{$totalUsers}</td>
+                        <td style='text-align:start;font-weight:bold;color:#526483;'>{$totalUsers}</td>
                     </tr>
                     <tr>
                         <td style='color:#666;padding-top:6px;'>إعلانات نشطة</td>
-                        <td style='text-align:start;font-weight:bold;color:#0a2342;padding-top:6px;'>{$totalActive}</td>
+                        <td style='text-align:start;font-weight:bold;color:#526483;padding-top:6px;'>{$totalActive}</td>
                     </tr>
                     <tr>
                         <td style='color:#666;padding-top:6px;'>مشاهدات الإعلانات (24س)</td>
-                        <td style='text-align:start;font-weight:bold;color:#0a2342;padding-top:6px;'>{$listingViews}</td>
+                        <td style='text-align:start;font-weight:bold;color:#526483;padding-top:6px;'>{$listingViews}</td>
                     </tr>
                 </table>
             </div>
 
             <!-- Section breakdown -->
-            <h3 style='color:#0a2342;font-size:14px;margin:24px 0 8px;'>📂 الإعلانات الجديدة حسب القسم</h3>
+            <h3 style='color:#526483;font-size:14px;margin:24px 0 8px;'>📂 الإعلانات الجديدة حسب القسم</h3>
             <table style='width:100%;background:white;border:1px solid #eee;border-radius:10px;overflow:hidden;font-size:13px;'>
                 {$sectionRows}
             </table>
 
             <!-- Top viewed listings -->
-            <h3 style='color:#0a2342;font-size:14px;margin:24px 0 8px;'>🔥 أعلى الإعلانات مشاهدةً</h3>
+            <h3 style='color:#526483;font-size:14px;margin:24px 0 8px;'>🔥 أعلى الإعلانات مشاهدةً</h3>
             <table style='width:100%;background:white;border:1px solid #eee;border-radius:10px;overflow:hidden;font-size:13px;'>
                 {$topRows}
             </table>
 
             <div style='text-align:center;margin:28px 0 0;'>
                 <a href='https://www.nwafizlogi.com/ar/admin'
-                   style='background:#0a2342;color:white;padding:11px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;'>
+                   style='background:#526483;color:white;padding:11px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;'>
                     لوحة الإدارة
                 </a>
             </div>";
@@ -764,9 +764,9 @@ class AdminEmailService
             <hr style='border:none;border-top:1px solid #eee;margin:28px 0 16px;'>
             <p style='color:#aaa;font-size:11px;text-align:center;line-height:1.6;'>
                 <strong>نوافذ</strong> — منصة اللوجستيك B2B في السعودية<br>
-                <a href='https://www.nwafizlogi.com' style='color:#10b981;text-decoration:none;'>www.nwafizlogi.com</a>
+                <a href='https://www.nwafizlogi.com' style='color:#0D9B6C;text-decoration:none;'>www.nwafizlogi.com</a>
                 &nbsp;·&nbsp;
-                <a href='mailto:support@nwafizlogi.com' style='color:#10b981;text-decoration:none;'>support@nwafizlogi.com</a>
+                <a href='mailto:support@nwafizlogi.com' style='color:#0D9B6C;text-decoration:none;'>support@nwafizlogi.com</a>
             </p>
         </div>";
     }

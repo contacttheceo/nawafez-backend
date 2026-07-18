@@ -239,15 +239,15 @@ class AuthController extends Controller
             <div style='text-align:center;margin-bottom:28px;padding:18px;background:white;border-radius:10px;'>
                 <img src='{$logo}' alt='نوافذ' width='140' style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
-            <h3 style='color:#0a2342;'>🔐 إعادة تعيين كلمة المرور</h3>
+            <h3 style='color:#526483;'>🔐 إعادة تعيين كلمة المرور</h3>
             <p style='color:#444;line-height:1.7;'>تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك على نوافذ. اضغط على الزر أدناه للمتابعة:</p>
             <div style='text-align:center;margin:28px 0;'>
-                <a href='{$safeUrl}' style='background:#0a2342;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
+                <a href='{$safeUrl}' style='background:#526483;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
                     إعادة تعيين كلمة المرور
                 </a>
             </div>
             <p style='color:#666;font-size:13px;'>لم يعمل الزر؟ انسخ الرابط:</p>
-            <p style='background:white;border:1px solid #eee;padding:10px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#0a2342;'>{$safeUrl}</p>
+            <p style='background:white;border:1px solid #eee;padding:10px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#526483;'>{$safeUrl}</p>
             <p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:16px;margin-top:24px;'>
                 إذا لم تطلب هذا، يمكنك تجاهل الرسالة. الرابط صالح لمدة 60 دقيقة فقط.
             </p>
@@ -266,7 +266,7 @@ class AuthController extends Controller
                 <img src='{$logo}' alt='نوافذ' width='140' style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
 
-            <h3 style='color:#0a2342;'>مرحباً {$safeName} 👋</h3>
+            <h3 style='color:#526483;'>مرحباً {$safeName} 👋</h3>
 
             <p style='color:#444;line-height:1.7;'>
                 شكراً لانضمامك إلى منصة نوافذ. لإكمال إنشاء حسابك ولتتمكّن من نشر إعلاناتك،
@@ -274,7 +274,7 @@ class AuthController extends Controller
             </p>
 
             <div style='text-align:center;margin:28px 0;'>
-                <a href='{$safeUrl}' style='background:#10b981;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
+                <a href='{$safeUrl}' style='background:#0D9B6C;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
                     ✓ تفعيل الحساب
                 </a>
             </div>
@@ -282,7 +282,7 @@ class AuthController extends Controller
             <p style='color:#666;font-size:13px;line-height:1.7;margin-top:24px;'>
                 <strong>لم يعمل الزر؟</strong> انسخ هذا الرابط والصقه في متصفّحك:
             </p>
-            <p style='background:white;border:1px solid #eee;padding:10px 12px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#0a2342;'>
+            <p style='background:white;border:1px solid #eee;padding:10px 12px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#526483;'>
                 {$safeUrl}
             </p>
 
@@ -292,7 +292,7 @@ class AuthController extends Controller
             </p>
 
             <p style='color:#aaa;font-size:11px;text-align:center;margin-top:16px;'>
-                للدعم: <a href='mailto:support@nwafizlogi.com' style='color:#10b981;text-decoration:none;'>support@nwafizlogi.com</a>
+                للدعم: <a href='mailto:support@nwafizlogi.com' style='color:#0D9B6C;text-decoration:none;'>support@nwafizlogi.com</a>
             </p>
         </div>";
     }

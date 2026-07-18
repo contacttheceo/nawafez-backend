@@ -305,15 +305,15 @@ class AdminController extends Controller
             <div style='text-align:center;margin-bottom:28px;padding:18px;background:white;border-radius:10px;'>
                 <img src='{$logo}' alt='نوافذ' width='140' style='max-width:140px;height:auto;display:inline-block;border:0;' />
             </div>
-            <h3 style='color:#0a2342;'>مرحباً {$safeName} 👋</h3>
+            <h3 style='color:#526483;'>مرحباً {$safeName} 👋</h3>
             <p style='color:#444;line-height:1.7;'>أرسلت إدارة نوافذ رابط التحقق إليك. اضغط لتفعيل حسابك:</p>
             <div style='text-align:center;margin:28px 0;'>
-                <a href='{$safeUrl}' style='background:#10b981;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
+                <a href='{$safeUrl}' style='background:#0D9B6C;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;'>
                     ✓ تفعيل الحساب
                 </a>
             </div>
             <p style='color:#666;font-size:13px;'>لم يعمل الزر؟ انسخ الرابط:</p>
-            <p style='background:white;border:1px solid #eee;padding:10px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#0a2342;'>{$safeUrl}</p>
+            <p style='background:white;border:1px solid #eee;padding:10px;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;direction:ltr;text-align:left;color:#526483;'>{$safeUrl}</p>
         </div>";
     }
 
