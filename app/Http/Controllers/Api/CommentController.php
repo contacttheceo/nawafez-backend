@@ -105,6 +105,9 @@ class CommentController extends Controller
             'body'       => trim($request->body),
         ]);
 
+        // A new comment is strong engagement — keep the listing alive.
+        $listing->touchActivity();
+
         $comment->load('user:id,name_ar,name_en,avatar,role,is_trusted_payer');
 
         // Web Push — notify listing owner (skip if owner commented on own listing

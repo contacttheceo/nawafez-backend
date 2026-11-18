@@ -257,7 +257,7 @@ class ListingController extends Controller
             'status'         => $status,
             'dynamic_data'   => $dynamicData,
             'media'          => $media,
-            'expires_at'     => now()->addDays(60),   // ← 60 days (matches spec)
+            'expires_at'     => Listing::defaultExpiresAt($section),  // section-aware TTL (see Listing::defaultTtlDays)
         ]);
 
         $listing->update([
@@ -509,6 +509,7 @@ class ListingController extends Controller
         }
 
         $listing->incrementViews();
+        $listing->touchActivity();   // engaged inventory stays alive
         return response()->json(['views' => $listing->views_count]);
     }
 }

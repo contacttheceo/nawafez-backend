@@ -88,6 +88,10 @@ class ContactRevealController extends Controller
             ], 404);
         }
 
+        // A contact reveal is the strongest buy-signal we have —
+        // definitely keep the listing alive.
+        $listing->touchActivity();
+
         // Log the reveal (audit + rate-limit source)
         DB::table('contact_reveals')->insert([
             'listing_id'      => $listing->id,

@@ -130,6 +130,53 @@ class Listing extends Model
         $this->increment('views_count');
     }
 
+    /**
+     * Section-aware TTL for a brand-new listing. The flat 60-day window
+     * we shipped first was far too short for B2B: a Contracts or M&A
+     * deal routinely takes 3-6 months to close, and every expired
+     * listing vanishes from /api/listings and from Google (scopeActive
+     * filters both). Fleet/Jobs get a slightly longer window than
+     * before, Contracts/M&A get the long sales-cycle window, and Forum
+     * threads never expire — they are discussions, not inventory.
+     */
+    public static function defaultTtlDays(string $section): ?int
+    {
+        return match ($section) {
+            'fleet', 'jobs' => 120,
+            'contracts', 'ma' => 180,
+            'forum'         => null,  // discussions don't expire
+            default         => 120,
+        };
+    }
+
+    public static function defaultExpiresAt(string $section): ?\Carbon\Carbon
+    {
+        $days = self::defaultTtlDays($section);
+        return $days === null ? null : now()->addDays($days);
+    }
+
+    /**
+     * Keep an actively-used listing alive. Every view / comment /
+     * contact-reveal calls this; if the listing is still active and its
+     * expiry is coming up within $window days, push it out so engaged
+     * listings don't silently disappear mid-conversation.
+     *
+     * Deliberately a no-op for already-expired listings — we never want
+     * a single stray crawler hit to resurrect inventory the owner meant
+     * to let lapse.
+     */
+    public function touchActivity(int $window = 30): void
+    {
+        if ($this->status !== 'active') return;
+        if (!$this->expires_at) return;               // never expires
+        if ($this->expires_at->isPast()) return;      // already expired — don't resurrect
+
+        $floor = now()->addDays($window);
+        if ($this->expires_at->greaterThanOrEqualTo($floor)) return;   // already far enough
+
+        $this->update(['expires_at' => $floor]);
+    }
+
     // Auto-compute financing eligibility for M&A listings
     public function computeFinancingEligibility(): bool
     {
